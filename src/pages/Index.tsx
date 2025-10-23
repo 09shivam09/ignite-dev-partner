@@ -1,9 +1,12 @@
+import { useNavigate } from "react-router-dom";
 import { Search, MapPin, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { BottomNavigation } from "@/components/BottomNavigation";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-10 bg-card border-b border-border">
@@ -18,11 +21,15 @@ const Index = () => {
         </div>
 
         <div className="px-4 pb-4">
-          <div className="relative">
+          <div
+            className="relative cursor-pointer"
+            onClick={() => navigate("/search")}
+          >
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               placeholder="Search vendors, services..."
               className="pl-10"
+              readOnly
             />
           </div>
         </div>
