@@ -3,9 +3,9 @@ import { Home, Grid3x3, Calendar, MessageCircle, User } from "lucide-react";
 
 const navItems = [
   { path: "/", icon: Home, label: "Home" },
-  { path: "/categories", icon: Grid3x3, label: "Categories" },
+  { path: "/favorites", icon: Grid3x3, label: "Favorites" },
   { path: "/bookings", icon: Calendar, label: "Bookings" },
-  { path: "/messages", icon: MessageCircle, label: "Messages" },
+  { path: "/chat", icon: MessageCircle, label: "Messages" },
   { path: "/profile", icon: User, label: "Profile" },
 ];
 

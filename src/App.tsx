@@ -17,6 +17,16 @@ import Payment from "./pages/Payment";
 import BookingConfirmation from "./pages/BookingConfirmation";
 import MyBookings from "./pages/MyBookings";
 import BookingDetails from "./pages/BookingDetails";
+import Chat from "./pages/Chat";
+import ChatDetail from "./pages/ChatDetail";
+import Profile from "./pages/Profile";
+import ProfileEdit from "./pages/ProfileEdit";
+import Favorites from "./pages/Favorites";
+import Notifications from "./pages/Notifications";
+import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorOrders from "./pages/vendor/VendorOrders";
+import VendorServices from "./pages/vendor/VendorServices";
+import VendorAnalytics from "./pages/vendor/VendorAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +51,16 @@ const App = () => (
             <Route path="/booking-confirmation" element={<BookingConfirmation />} />
             <Route path="/bookings" element={<MyBookings />} />
             <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/chat/:vendorId" element={<ChatDetail />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/edit" element={<ProfileEdit />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+            <Route path="/vendor/orders" element={<VendorOrders />} />
+            <Route path="/vendor/services" element={<VendorServices />} />
+            <Route path="/vendor/analytics" element={<VendorAnalytics />} />
             <Route path="/" element={<Index />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
