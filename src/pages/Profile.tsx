@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Card } from "@/components/ui/card";
@@ -7,9 +8,56 @@ import {
   User, MapPin, Phone, Mail, CreditCard, Bell, 
   HelpCircle, Shield, LogOut, ChevronRight, Edit 
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+        setProfile(data);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/auth/login");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const menuItems = [
     { icon: User, label: "Edit Profile", path: "/profile/edit" },
@@ -19,6 +67,20 @@ const Profile = () => {
     { icon: HelpCircle, label: "Help & Support", path: "/profile/help" },
     { icon: Shield, label: "Privacy & Security", path: "/profile/privacy" },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const initials = profile?.full_name
+    ?.split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase() || 'U';
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -33,19 +95,21 @@ const Profile = () => {
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
               <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                JD
+                {initials}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-xl font-bold mb-1">John Doe</h2>
+              <h2 className="text-xl font-bold mb-1">{profile?.full_name || 'User'}</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                 <Mail className="h-4 w-4" />
-                <span>john.doe@example.com</span>
+                <span>{profile?.email || 'No email'}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="h-4 w-4" />
-                <span>+1 234 567 8900</span>
-              </div>
+              {profile?.phone && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-4 w-4" />
+                  <span>{profile.phone}</span>
+                </div>
+              )}
             </div>
             <Button
               variant="ghost"
@@ -94,7 +158,7 @@ const Profile = () => {
         </Card>
 
         {/* Logout Button */}
-        <Button variant="destructive" className="w-full" size="lg">
+        <Button variant="destructive" className="w-full" size="lg" onClick={handleLogout}>
           <LogOut className="h-5 w-5 mr-2" />
           Logout
         </Button>

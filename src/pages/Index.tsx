@@ -9,6 +9,7 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { AISupportChat } from "@/components/AISupportChat";
 import { FeedbackForm } from "@/components/FeedbackForm";
+import heroImage from "@/assets/hero-event.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -82,16 +83,17 @@ const Index = () => {
       </div>
 
       {/* Hero Section */}
-      <div className="relative h-64 bg-gradient-to-br from-primary/20 via-accent/10 to-background overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80')] bg-cover bg-center opacity-20" />
-        <div className="relative h-full flex flex-col justify-center items-center text-center p-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2 animate-fade-in">
-            Plan Your Perfect Event
-          </h1>
-          <p className="text-muted-foreground max-w-md animate-fade-in">
-            Connect with top-rated vendors for catering, photography, venues, and more
-          </p>
-          <Button className="mt-6 animate-scale-in" onClick={() => navigate("/search")}>
+      <div className="relative h-64 overflow-hidden">
+        <img 
+          src={heroImage}
+          alt="Event Planning" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-accent/70 to-primary/80" />
+        <div className="absolute inset-0 flex flex-col justify-center items-center text-white p-6">
+          <h1 className="text-3xl font-bold mb-2 text-center">Plan Your Perfect Event</h1>
+          <p className="text-sm opacity-90 text-center mb-4">Find the best vendors in your area</p>
+          <Button className="bg-white text-primary hover:bg-white/90" onClick={() => navigate("/search")}>
             Explore Services
           </Button>
         </div>

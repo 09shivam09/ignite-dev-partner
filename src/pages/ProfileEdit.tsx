@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,21 +7,91 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Camera } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProfileEdit = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState<string>("");
   const [formData, setFormData] = useState({
-    fullName: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 234 567 8900",
-    dateOfBirth: "1990-01-01",
-    bio: "Event enthusiast and professional organizer",
+    fullName: "",
+    email: "",
+    phone: "",
+    bio: "",
   });
 
-  const handleSave = () => {
-    toast.success("Profile updated successfully!");
-    navigate("/profile");
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        setUserId(user.id);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+        
+        if (data) {
+          setFormData({
+            fullName: data.full_name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            bio: data.bio || "",
+          });
+        }
+      }
+    } catch (error: any) {
+      toast.error("Error loading profile");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          bio: formData.bio,
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast.success("Profile updated successfully!");
+      navigate("/profile");
+    } catch (error: any) {
+      toast.error(error.message || "Error updating profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const initials = formData.fullName
+    ?.split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase() || 'U';
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,7 +102,9 @@ const ProfileEdit = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-xl font-bold">Edit Profile</h1>
-          <Button onClick={handleSave}>Save</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : "Save"}
+          </Button>
         </div>
       </div>
 
@@ -42,7 +114,7 @@ const ProfileEdit = () => {
           <div className="relative">
             <Avatar className="h-24 w-24">
               <AvatarFallback className="bg-primary text-primary-foreground text-3xl">
-                JD
+                {initials}
               </AvatarFallback>
             </Avatar>
             <Button
@@ -83,16 +155,6 @@ const ProfileEdit = () => {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="dateOfBirth">Date of Birth</Label>
-            <Input
-              id="dateOfBirth"
-              type="date"
-              value={formData.dateOfBirth}
-              onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
             />
           </div>
 
