@@ -7,7 +7,7 @@ import { CartProvider } from "./contexts/CartContext";
 import Index from "./pages/Index";
 import Splash from "./pages/Splash";
 import Onboarding from "./pages/Onboarding";
-import Signup from "./pages/Signup";
+import Login from "./pages/Login";
 import Search from "./pages/Search";
 import CategoryListing from "./pages/CategoryListing";
 import VendorDetails from "./pages/VendorDetails";
@@ -41,7 +41,7 @@ const App = () => (
           <Routes>
             <Route path="/splash" element={<Splash />} />
             <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/auth/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/search" element={<Search />} />
             <Route path="/category/:categoryId" element={<CategoryListing />} />
             <Route path="/vendor/:vendorId" element={<VendorDetails />} />
