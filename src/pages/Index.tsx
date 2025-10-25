@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Search, Bell, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { AISupportChat } from "@/components/AISupportChat";
