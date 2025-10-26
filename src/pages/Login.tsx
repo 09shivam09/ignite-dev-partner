@@ -113,13 +113,24 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float [animation-delay:1.5s]"></div>
+      </div>
+
+      <Card className="w-full max-w-md glass shadow-premium border-border/50 animate-scale-in relative z-10">
+        <CardHeader className="space-y-3 text-center">
+          <div className="mb-2">
+            <h1 className="text-4xl font-bold text-gradient-primary mb-1">
+              EVENT-CONNECT
+            </h1>
+          </div>
+          <CardTitle className="text-2xl font-bold">
             {isSignUp ? "Create an account" : "Welcome back"}
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription>
             {isSignUp
               ? "Sign up to start planning your events"
               : "Sign in to your account to continue"}
@@ -161,7 +172,7 @@ const Login = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" variant="premium" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -180,14 +191,14 @@ const Login = () => {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+              <span className="glass px-3 py-1 rounded-full text-muted-foreground">Or continue with</span>
             </div>
           </div>
 
           <Button
             variant="outline"
             type="button"
-            className="w-full"
+            className="w-full transition-smooth hover:shadow-md"
             onClick={handleGoogleAuth}
           >
             <Mail className="mr-2 h-4 w-4" />
@@ -201,7 +212,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setIsSignUp(false)}
-                  className="text-primary hover:underline font-medium"
+                  className="text-gradient-accent font-semibold hover:underline transition-smooth"
                 >
                   Sign in
                 </button>
@@ -212,7 +223,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setIsSignUp(true)}
-                  className="text-primary hover:underline font-medium"
+                  className="text-gradient-accent font-semibold hover:underline transition-smooth"
                 >
                   Sign up
                 </button>

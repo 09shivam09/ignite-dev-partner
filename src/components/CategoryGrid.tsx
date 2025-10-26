@@ -19,15 +19,16 @@ export const CategoryGrid = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="grid grid-cols-3 gap-4 p-6">
-      {categories.map((category) => (
+    <div className="grid grid-cols-3 gap-4">
+      {categories.map((category, index) => (
         <button
           key={category.id}
           onClick={() => navigate(`/category/${category.id}`)}
-          className="flex flex-col items-center justify-center space-y-2 rounded-lg bg-card p-4 transition-all hover:scale-105 hover:shadow-lg border border-border"
+          className="glass glass-hover rounded-2xl p-6 transition-all shadow-md group animate-scale-in"
+          style={{ animationDelay: `${index * 100}ms` }}
         >
-          <div className="text-4xl">{category.icon}</div>
-          <span className="text-sm font-medium text-card-foreground">{category.name}</span>
+          <div className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">{category.icon}</div>
+          <span className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">{category.name}</span>
         </button>
       ))}
     </div>

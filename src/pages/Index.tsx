@@ -50,20 +50,20 @@ const Index = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 pb-20">
       {/* Header */}
-      <div className="sticky top-0 bg-card border-b border-border z-10">
+      <div className="sticky top-0 glass z-10 border-b border-border/50 shadow-md">
         <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium">Mumbai, India</span>
+          <div className="flex items-center gap-2 group cursor-pointer transition-smooth hover:scale-105">
+            <MapPin className="h-5 w-5 text-primary animate-pulse" />
+            <span className="text-sm font-semibold group-hover:text-primary transition-colors">Mumbai, India</span>
           </div>
           <div className="flex items-center gap-2">
             <FeedbackForm />
-            <Button variant="ghost" size="icon" onClick={() => navigate("/notifications")}>
+            <Button variant="ghost" size="icon" className="hover:scale-110 transition-smooth" onClick={() => navigate("/notifications")}>
               <Bell className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
+            <Button variant="ghost" size="icon" className="hover:scale-110 transition-smooth" onClick={handleLogout}>
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
@@ -71,11 +71,11 @@ const Index = () => {
 
         {/* Search Bar */}
         <div className="px-4 pb-4">
-          <div className="relative cursor-pointer" onClick={() => navigate("/search")}>
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <div className="relative cursor-pointer transition-smooth hover:scale-[1.02] group" onClick={() => navigate("/search")}>
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
             <Input
               placeholder="Search for services, vendors..."
-              className="pl-10 bg-background"
+              className="pl-10 glass border-border/50 focus:border-primary/50 transition-all"
               readOnly
             />
           </div>
@@ -83,17 +83,26 @@ const Index = () => {
       </div>
 
       {/* Hero Section */}
-      <div className="relative h-64 overflow-hidden">
+      <div className="relative h-80 overflow-hidden">
         <img 
           src={heroImage}
           alt="Event Planning" 
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-accent/70 to-primary/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-accent/80 to-primary/90" />
         <div className="absolute inset-0 flex flex-col justify-center items-center text-white p-6">
-          <h1 className="text-3xl font-bold mb-2 text-center">Plan Your Perfect Event</h1>
-          <p className="text-sm opacity-90 text-center mb-4">Find the best vendors in your area</p>
-          <Button className="bg-white text-primary hover:bg-white/90" onClick={() => navigate("/search")}>
+          <h1 className="text-4xl md:text-5xl font-bold mb-3 text-center animate-fade-in-up">
+            Plan Your Perfect Event
+          </h1>
+          <p className="text-base opacity-95 text-center mb-6 max-w-md animate-fade-in [animation-delay:0.2s]">
+            Discover premium vendors and create unforgettable moments
+          </p>
+          <Button 
+            variant="glow"
+            size="lg"
+            className="bg-white text-primary hover:bg-white/90 shadow-xl animate-scale-in [animation-delay:0.4s]" 
+            onClick={() => navigate("/search")}
+          >
             Explore Services
           </Button>
         </div>
@@ -101,14 +110,20 @@ const Index = () => {
 
       {/* Categories */}
       <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Browse by Category</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Browse by Category</h2>
+          <div className="h-1 flex-1 ml-4 bg-gradient-to-r from-primary/20 to-transparent rounded-full"></div>
+        </div>
         <CategoryGrid />
       </div>
 
       {/* Featured Vendors */}
       <div className="px-6 pb-8">
-        <h2 className="text-xl font-semibold mb-4">Featured Vendors</h2>
-        <div className="space-y-4">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Featured Vendors</h2>
+          <div className="h-1 flex-1 ml-4 bg-gradient-to-r from-accent/20 to-transparent rounded-full"></div>
+        </div>
+        <div className="space-y-5">
           {[
             {
               name: "Elite Photography",
@@ -134,26 +149,30 @@ const Index = () => {
           ].map((vendor, i) => (
             <div
               key={i}
-              className="bg-card rounded-xl border border-border overflow-hidden cursor-pointer hover:shadow-lg transition-all animate-fade-in"
+              className="glass glass-hover rounded-2xl overflow-hidden cursor-pointer shadow-premium animate-fade-in group"
               onClick={() => navigate(`/vendor/${i + 1}`)}
-              style={{ animationDelay: `${i * 100}ms` }}
+              style={{ animationDelay: `${i * 150}ms` }}
             >
-              <div className="relative h-40">
+              <div className="relative h-48 overflow-hidden">
                 <img
                   src={vendor.image}
                   alt={vendor.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                <div className="absolute top-2 right-2 bg-success text-white px-2 py-1 rounded-full text-xs font-semibold">
-                  ⭐ {vendor.rating}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                <div className="absolute top-3 right-3 glass px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
+                  <span className="text-yellow-400">⭐</span>
+                  <span className="text-white">{vendor.rating}</span>
                 </div>
               </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-lg mb-1">{vendor.name}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{vendor.category}</p>
+              <div className="p-5">
+                <h3 className="font-bold text-xl mb-1 group-hover:text-primary transition-colors">{vendor.name}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{vendor.category}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-accent font-medium">Starting at {vendor.price}</span>
-                  <Button variant="outline" size="sm">View Details</Button>
+                  <span className="text-gradient-accent font-bold text-lg">Starting at {vendor.price}</span>
+                  <Button variant="outline" size="sm" className="group-hover:border-primary/40">
+                    View Details
+                  </Button>
                 </div>
               </div>
             </div>
