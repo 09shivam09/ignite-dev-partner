@@ -9,6 +9,10 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { AISupportChat } from "@/components/AISupportChat";
 import { FeedbackForm } from "@/components/FeedbackForm";
+import { EventTypeSelector } from "@/components/EventTypeSelector";
+import { TrendingThemes } from "@/components/TrendingThemes";
+import { OffersCarousel } from "@/components/OffersCarousel";
+import { BudgetPlanner } from "@/components/BudgetPlanner";
 import heroImage from "@/assets/hero-event-premium.jpg";
 import vendorPhotographer from "@/assets/vendor-photographer.jpg";
 import vendorCatering from "@/assets/vendor-catering.jpg";
@@ -62,6 +66,7 @@ const Index = () => {
             <span className="text-sm font-semibold group-hover:text-primary transition-colors">Mumbai, India</span>
           </div>
           <div className="flex items-center gap-2">
+            <BudgetPlanner />
             <FeedbackForm />
             <Button variant="ghost" size="icon" className="hover:scale-110 transition-smooth" onClick={() => navigate("/notifications")}>
               <Bell className="h-5 w-5" />
@@ -109,6 +114,21 @@ const Index = () => {
             Explore Services
           </Button>
         </div>
+      </div>
+
+      {/* Event Type Selector */}
+      <div className="p-6">
+        <EventTypeSelector />
+      </div>
+
+      {/* Offers Carousel */}
+      <div className="px-6 pb-8">
+        <OffersCarousel />
+      </div>
+
+      {/* Trending Themes */}
+      <div className="px-6 pb-8">
+        <TrendingThemes />
       </div>
 
       {/* Categories */}

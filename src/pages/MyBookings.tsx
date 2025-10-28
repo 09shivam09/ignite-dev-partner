@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Search, Calendar, MessageCircle } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { ReviewSubmission } from "@/components/ReviewSubmission";
 
 const mockBookings = {
   upcoming: [
@@ -13,6 +14,7 @@ const mockBookings = {
       id: "1",
       ref: "EC1234ABCD",
       vendorName: "Elite Catering Co",
+      vendor: "vendor-123",
       service: "Premium Package",
       date: "Nov 15, 2025",
       time: "5:00 PM",
@@ -23,6 +25,7 @@ const mockBookings = {
       id: "2",
       ref: "EC5678EFGH",
       vendorName: "Perfect Moments Photo",
+      vendor: "vendor-456",
       service: "Basic Package",
       date: "Nov 15, 2025",
       time: "3:00 PM",
@@ -35,6 +38,7 @@ const mockBookings = {
       id: "3",
       ref: "EC9012IJKL",
       vendorName: "Grand Event Hall",
+      vendor: "vendor-789",
       service: "Deluxe Venue",
       date: "Oct 5, 2025",
       time: "6:00 PM",
@@ -90,7 +94,16 @@ const MyBookings = () => {
 
       <div className="flex justify-between items-center pt-3 border-t border-border">
         <span className="text-sm text-muted-foreground">Ref: {booking.ref}</span>
-        <span className="font-semibold text-foreground">${booking.amount}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-foreground">${booking.amount}</span>
+          {booking.status === "completed" && (
+            <ReviewSubmission 
+              bookingId={booking.id} 
+              vendorId={booking.vendor}
+              trigger={<Button size="sm" variant="outline">Review</Button>}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
