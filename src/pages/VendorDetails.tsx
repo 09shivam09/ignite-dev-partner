@@ -5,6 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, MapPin, Star, Clock, MessageCircle, Share2, Heart } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import portfolioCatering1 from "@/assets/portfolio-catering-1.jpg";
+import portfolioCatering2 from "@/assets/portfolio-catering-2.jpg";
+import portfolioDecoration1 from "@/assets/portfolio-decoration-1.jpg";
+import portfolioDecoration2 from "@/assets/portfolio-decoration-2.jpg";
 
 const mockServices = [
   { id: 1, name: "Basic Package", price: 500, description: "Perfect for small gatherings" },
@@ -48,9 +52,9 @@ const VendorDetails = () => {
       <div className="relative">
         <Carousel className="w-full">
           <CarouselContent>
-            {[1, 2, 3, 4].map((i) => (
+            {[portfolioCatering1, portfolioCatering2, portfolioDecoration1, portfolioDecoration2].map((img, i) => (
               <CarouselItem key={i}>
-                <div className="h-64 bg-muted"></div>
+                <img src={img} alt={`Portfolio ${i + 1}`} className="h-64 w-full object-cover" />
               </CarouselItem>
             ))}
           </CarouselContent>

@@ -9,7 +9,10 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { AISupportChat } from "@/components/AISupportChat";
 import { FeedbackForm } from "@/components/FeedbackForm";
-import heroImage from "@/assets/hero-event.jpg";
+import heroImage from "@/assets/hero-event-premium.jpg";
+import vendorPhotographer from "@/assets/vendor-photographer.jpg";
+import vendorCatering from "@/assets/vendor-catering.jpg";
+import vendorVenue from "@/assets/vendor-venue.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -130,21 +133,21 @@ const Index = () => {
               category: "Photography",
               rating: 4.9,
               price: "₹25,000",
-              image: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=400&q=80"
+              image: vendorPhotographer
             },
             {
               name: "Royal Caterers",
               category: "Catering",
               rating: 4.8,
               price: "₹15,000",
-              image: "https://images.unsplash.com/photo-1555244162-803834f70033?w=400&q=80"
+              image: vendorCatering
             },
             {
               name: "Grand Banquet Hall",
               category: "Venues",
               rating: 4.7,
               price: "₹50,000",
-              image: "https://images.unsplash.com/photo-1519167758481-83f29da8a1c0?w=400&q=80"
+              image: vendorVenue
             }
           ].map((vendor, i) => (
             <div
