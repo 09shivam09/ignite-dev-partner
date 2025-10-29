@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Search, Bell, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { CategoryGrid } from "@/components/CategoryGrid";
@@ -14,6 +14,8 @@ import { TrendingThemes } from "@/components/TrendingThemes";
 import { OffersCarousel } from "@/components/OffersCarousel";
 import { BudgetPlanner } from "@/components/BudgetPlanner";
 import { SmartRecommendations } from "@/components/SmartRecommendations";
+import { analytics } from "@/lib/analytics";
+import { setUserContext } from "@/lib/sentry";
 import heroImage from "@/assets/hero-event-premium.jpg";
 import vendorPhotographer from "@/assets/vendor-photographer.jpg";
 import vendorCatering from "@/assets/vendor-catering.jpg";
@@ -21,10 +23,14 @@ import vendorVenue from "@/assets/vendor-venue.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    // Initialize analytics
+    analytics.initialize();
+    
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -32,6 +38,9 @@ const Index = () => {
         return;
       }
       setUser(session.user);
+      
+      // Set user context for error tracking
+      setUserContext(session.user.id, session.user.email);
     };
 
     checkUser();
@@ -41,11 +50,17 @@ const Index = () => {
         navigate("/login");
       } else {
         setUser(session.user);
+        setUserContext(session.user.id, session.user.email);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Track page views
+  useEffect(() => {
+    analytics.pageView(location.pathname);
+  }, [location]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
