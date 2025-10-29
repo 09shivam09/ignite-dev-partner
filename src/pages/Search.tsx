@@ -10,6 +10,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VendorMap } from "@/components/VendorMap";
+import { VoiceSearch } from "@/components/VoiceSearch";
+import { motion } from "framer-motion";
 
 const categories = ["Catering", "Photography", "Venues", "Decoration", "Entertainment", "Supplies"];
 const ratings = [5, 4, 3, 2, 1];
@@ -68,13 +70,17 @@ const Search = () => {
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ChevronLeft className="h-6 w-6" />
           </Button>
-          <div className="relative flex-1">
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <div className="relative flex-1 flex items-center gap-2">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
             <Input
               placeholder="Search vendors..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 pr-4"
+            />
+            <VoiceSearch
+              onResult={(transcript) => setSearchQuery(transcript)}
+              className="relative"
             />
           </div>
           <Sheet>
@@ -177,11 +183,14 @@ const Search = () => {
 
             <TabsContent value="list" className="mt-4">
               <main className="p-4 space-y-4">
-                {mockVendors.map((vendor) => (
-                  <div
+                {mockVendors.map((vendor, index) => (
+                  <motion.div
                     key={vendor.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
                     onClick={() => navigate(`/vendor/${vendor.id}`)}
-                    className="bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]"
+                    className="bg-card border border-border rounded-lg overflow-hidden cursor-pointer hover-lift tap-effect"
                   >
                     <div className="h-48 bg-muted"></div>
                     <div className="p-4">
@@ -197,7 +206,7 @@ const Search = () => {
                         <span className="font-semibold text-foreground">{vendor.price}</span>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </main>
             </TabsContent>

@@ -16,6 +16,7 @@ import { BudgetPlanner } from "@/components/BudgetPlanner";
 import { SmartRecommendations } from "@/components/SmartRecommendations";
 import { analytics } from "@/lib/analytics";
 import { setUserContext } from "@/lib/sentry";
+import { AccessibilitySettings } from "@/components/AccessibilitySettings";
 import heroImage from "@/assets/hero-event-premium.jpg";
 import vendorPhotographer from "@/assets/vendor-photographer.jpg";
 import vendorCatering from "@/assets/vendor-catering.jpg";
@@ -84,6 +85,7 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <BudgetPlanner />
             <FeedbackForm />
+            <AccessibilitySettings />
             <Button variant="ghost" size="icon" className="hover:scale-110 transition-smooth" onClick={() => navigate("/notifications")}>
               <Bell className="h-5 w-5" />
             </Button>

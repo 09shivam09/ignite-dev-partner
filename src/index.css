@@ -260,6 +260,39 @@ All colors MUST be HSL.
     box-shadow: var(--shadow-glow);
   }
 
+  /* Accessibility: Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  .reduce-motion * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Accessibility: High Contrast */
+  .high-contrast {
+    --border: 0 0% 30%;
+    --muted: 0 0% 25%;
+    --muted-foreground: 0 0% 80%;
+  }
+
+  /* Accessibility: Font Size */
+  [data-font-size="large"] {
+    font-size: 125%;
+  }
+
+  [data-font-size="xlarge"] {
+    font-size: 150%;
+  }
+
   /* Shimmer Loading Effect */
   @keyframes shimmer {
     0% {

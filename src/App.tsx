@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { GoogleMapsProvider } from "./components/GoogleMapsProvider";
+import { AccessibilityProvider } from "./components/AccessibilityProvider";
 import Index from "./pages/Index";
 import Splash from "./pages/Splash";
 import Onboarding from "./pages/Onboarding";
@@ -37,12 +38,13 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <GoogleMapsProvider>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+    <AccessibilityProvider>
+      <GoogleMapsProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
             <Routes>
             <Route path="/splash" element={<Splash />} />
             <Route path="/onboarding" element={<Onboarding />} />
@@ -73,10 +75,11 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </CartProvider>
-    </GoogleMapsProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CartProvider>
+      </GoogleMapsProvider>
+    </AccessibilityProvider>
   </QueryClientProvider>
 );
 

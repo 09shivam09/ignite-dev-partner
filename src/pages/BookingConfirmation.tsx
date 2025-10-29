@@ -1,26 +1,54 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Download, Share2 } from "lucide-react";
+import { celebrateBooking } from "@/lib/confetti";
+import { motion } from "framer-motion";
 
 const BookingConfirmation = () => {
   const navigate = useNavigate();
   const bookingRef = "EC" + Math.random().toString(36).substring(2, 10).toUpperCase();
 
+  useEffect(() => {
+    // Celebrate successful booking with confetti
+    celebrateBooking();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <div className="mb-8 animate-scale-in">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.6 }}
+          className="mb-8"
+        >
           <CheckCircle2 className="h-24 w-24 text-success mx-auto" />
-        </div>
+        </motion.div>
 
-        <h1 className="text-3xl font-bold text-foreground mb-2">
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-3xl font-bold text-foreground mb-2"
+        >
           Booking Confirmed!
-        </h1>
-        <p className="text-muted-foreground mb-8 max-w-md">
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-muted-foreground mb-8 max-w-md"
+        >
           Your booking has been successfully confirmed. We've sent the details to your email.
-        </p>
+        </motion.p>
 
-        <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-card border border-border rounded-lg p-6 w-full max-w-md mb-8"
+        >
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Booking Reference</p>
@@ -58,7 +86,7 @@ const BookingConfirmation = () => {
               </ul>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         <div className="flex flex-col space-y-3 w-full max-w-md">
           <Button
