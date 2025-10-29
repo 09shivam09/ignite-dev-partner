@@ -10,7 +10,14 @@ interface ReviewInsightsProps {
 }
 
 export const ReviewInsights = ({ vendorId }: ReviewInsightsProps) => {
+  // Validate UUID format before making API call
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vendorId);
   const { data: insights, isLoading } = useReviewInsights(vendorId);
+
+  // Don't show for non-UUID vendor IDs (mock data)
+  if (!isValidUUID) {
+    return null;
+  }
 
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;

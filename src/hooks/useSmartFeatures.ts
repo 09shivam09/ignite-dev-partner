@@ -23,6 +23,8 @@ export const useAIRecommendations = (params: {
 
 // Review Insights
 export const useReviewInsights = (vendorId: string) => {
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vendorId);
+  
   return useQuery({
     queryKey: ["review-insights", vendorId],
     queryFn: async () => {
@@ -32,7 +34,7 @@ export const useReviewInsights = (vendorId: string) => {
       if (error) throw error;
       return data.insights;
     },
-    enabled: !!vendorId,
+    enabled: !!vendorId && isValidUUID,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
