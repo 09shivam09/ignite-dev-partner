@@ -15,7 +15,7 @@ export const AISupportChat = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm here to help you with EVENT-CONNECT. How can I assist you today?",
+      content: "Hi! I'm your AI event planning assistant powered by advanced AI 🎉\n\nI can help you:\n• Plan events (weddings, birthdays, corporate)\n• Find and recommend vendors\n• Calculate budgets\n• Answer booking questions\n\nWhat event are you planning?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -149,8 +149,10 @@ export const AISupportChat = () => {
 
       {isOpen && (
         <Card className="fixed bottom-6 right-6 w-96 h-[500px] flex flex-col shadow-2xl z-50">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
-            <CardTitle className="text-lg">AI Support</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b bg-gradient-to-r from-primary/10 to-accent/10">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <span className="text-2xl">🤖</span> AI Event Assistant
+            </CardTitle>
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
               <X className="h-4 w-4" />
             </Button>

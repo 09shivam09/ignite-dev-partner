@@ -5,17 +5,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft, Search as SearchIcon, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, Search as SearchIcon, SlidersHorizontal, Map } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VendorMap } from "@/components/VendorMap";
 
 const categories = ["Catering", "Photography", "Venues", "Decoration", "Entertainment", "Supplies"];
 const ratings = [5, 4, 3, 2, 1];
 
 const mockVendors = [
-  { id: 1, name: "Elite Catering Co", category: "Catering", rating: 4.9, price: "$500+", image: "" },
-  { id: 2, name: "Perfect Moments Photo", category: "Photography", rating: 4.8, price: "$300+", image: "" },
-  { id: 3, name: "Grand Event Hall", category: "Venues", rating: 4.7, price: "$1000+", image: "" },
+  { 
+    id: "1", 
+    business_name: "Elite Catering Co", 
+    name: "Elite Catering Co",
+    category: "Catering", 
+    rating: 4.9, 
+    price: "$500+", 
+    image: "",
+    location: { latitude: 28.6139, longitude: 77.2090 }
+  },
+  { 
+    id: "2", 
+    business_name: "Perfect Moments Photo", 
+    name: "Perfect Moments Photo",
+    category: "Photography", 
+    rating: 4.8, 
+    price: "$300+", 
+    image: "",
+    location: { latitude: 28.6229, longitude: 77.2200 }
+  },
+  { 
+    id: "3", 
+    business_name: "Grand Event Hall", 
+    name: "Grand Event Hall",
+    category: "Venues", 
+    rating: 4.7, 
+    price: "$1000+", 
+    image: "",
+    location: { latitude: 28.6049, longitude: 77.1980 }
+  },
 ];
 
 const Search = () => {
@@ -124,44 +153,65 @@ const Search = () => {
         </div>
 
         <div className="px-4 pb-4">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="rating">Highest Rated</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-              <SelectItem value="distance">Nearest First</SelectItem>
-            </SelectContent>
-          </Select>
+          <Tabs defaultValue="list">
+            <div className="flex items-center gap-2">
+              <TabsList>
+                <TabsTrigger value="list">List</TabsTrigger>
+                <TabsTrigger value="map">
+                  <Map className="h-4 w-4 mr-1" />
+                  Map
+                </TabsTrigger>
+              </TabsList>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rating">Highest Rated</SelectItem>
+                  <SelectItem value="price-low">Price: Low to High</SelectItem>
+                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                  <SelectItem value="distance">Nearest First</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <TabsContent value="list" className="mt-4">
+              <main className="p-4 space-y-4">
+                {mockVendors.map((vendor) => (
+                  <div
+                    key={vendor.id}
+                    onClick={() => navigate(`/vendor/${vendor.id}`)}
+                    className="bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]"
+                  >
+                    <div className="h-48 bg-muted"></div>
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-semibold text-foreground">{vendor.name}</h3>
+                          <p className="text-sm text-muted-foreground">{vendor.category}</p>
+                        </div>
+                        <span className="text-accent font-medium">⭐ {vendor.rating}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-sm text-muted-foreground">Starting at</span>
+                        <span className="font-semibold text-foreground">{vendor.price}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </main>
+            </TabsContent>
+
+            <TabsContent value="map" className="mt-4 px-4">
+              <VendorMap 
+                vendors={mockVendors}
+                center={{ lat: 28.6139, lng: 77.2090 }}
+                zoom={12}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </header>
-
-      <main className="p-4 space-y-4">
-        {mockVendors.map((vendor) => (
-          <div
-            key={vendor.id}
-            onClick={() => navigate(`/vendor/${vendor.id}`)}
-            className="bg-card border border-border rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]"
-          >
-            <div className="h-48 bg-muted"></div>
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-semibold text-foreground">{vendor.name}</h3>
-                  <p className="text-sm text-muted-foreground">{vendor.category}</p>
-                </div>
-                <span className="text-accent font-medium">⭐ {vendor.rating}</span>
-              </div>
-              <div className="flex justify-between items-center mt-3">
-                <span className="text-sm text-muted-foreground">Starting at</span>
-                <span className="font-semibold text-foreground">{vendor.price}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </main>
     </div>
   );
 };

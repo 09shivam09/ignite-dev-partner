@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,10 +15,37 @@ serve(async (req) => {
   try {
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    // Get context from database
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: categories } = await supabase
+      .from('categories')
+      .select('name, slug')
+      .eq('is_active', true)
+      .limit(10);
+
+    const { data: popularServices } = await supabase
+      .from('vendor_services')
+      .select('name, base_price, vendors(business_name)')
+      .eq('is_available', true)
+      .order('base_price', { ascending: true })
+      .limit(10);
+
+    const context = {
+      available_categories: categories?.map(c => c.name) || [],
+      sample_services: popularServices?.map(s => ({
+        name: s.name,
+        price: s.base_price,
+        vendor: (s.vendors as any)?.business_name || 'Unknown'
+      })) || []
+    };
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -30,7 +58,17 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a helpful customer support assistant for EVENT-CONNECT, an event planning marketplace that connects consumers with service providers like caterers, photographers, venues, and entertainment. Help users with booking issues, vendor inquiries, general questions about the platform, and provide friendly assistance. Keep responses concise and helpful."
+            content: `You are an expert event planning assistant for EVENT-CONNECT. Help users:
+- Plan events (weddings, birthdays, corporate, parties)
+- Find and recommend vendors/services  
+- Calculate budgets and suggest packages
+- Answer questions about booking process
+
+Available service categories: ${context.available_categories.join(', ')}
+
+Sample services and pricing: ${JSON.stringify(context.sample_services, null, 2)}
+
+Be friendly, concise, and helpful. If asked about specific services, mention actual available options with prices.`
           },
           ...messages,
         ],

@@ -13,6 +13,7 @@ import { EventTypeSelector } from "@/components/EventTypeSelector";
 import { TrendingThemes } from "@/components/TrendingThemes";
 import { OffersCarousel } from "@/components/OffersCarousel";
 import { BudgetPlanner } from "@/components/BudgetPlanner";
+import { SmartRecommendations } from "@/components/SmartRecommendations";
 import heroImage from "@/assets/hero-event-premium.jpg";
 import vendorPhotographer from "@/assets/vendor-photographer.jpg";
 import vendorCatering from "@/assets/vendor-catering.jpg";
@@ -129,6 +130,14 @@ const Index = () => {
       {/* Trending Themes */}
       <div className="px-6 pb-8">
         <TrendingThemes />
+      </div>
+
+      {/* Smart AI Recommendations */}
+      <div className="px-6 pb-8">
+        <SmartRecommendations 
+          location="Mumbai"
+          budget={50000}
+        />
       </div>
 
       {/* Categories */}

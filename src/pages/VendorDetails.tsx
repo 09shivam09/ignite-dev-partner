@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, MapPin, Star, Clock, MessageCircle, Share2, Heart } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { ReviewInsights } from "@/components/ReviewInsights";
 import portfolioCatering1 from "@/assets/portfolio-catering-1.jpg";
 import portfolioCatering2 from "@/assets/portfolio-catering-2.jpg";
 import portfolioDecoration1 from "@/assets/portfolio-decoration-1.jpg";
@@ -121,6 +122,8 @@ const VendorDetails = () => {
           </TabsContent>
 
           <TabsContent value="reviews" className="space-y-4 mt-4">
+            <ReviewInsights vendorId={vendorId || "1"} />
+            
             {mockReviews.map((review) => (
               <div key={review.id} className="bg-card border border-border rounded-lg p-4">
                 <div className="flex items-start justify-between mb-2">
