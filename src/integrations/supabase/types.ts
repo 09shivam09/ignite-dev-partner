@@ -358,6 +358,66 @@ export type Database = {
         }
         Relationships: []
       }
+      offers: {
+        Row: {
+          applicable_categories: string[] | null
+          applicable_services: string[] | null
+          created_at: string | null
+          current_uses: number | null
+          description: string | null
+          discount_amount: number | null
+          discount_percent: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          max_uses: number | null
+          min_booking_amount: number | null
+          terms_conditions: string | null
+          title: string
+          updated_at: string | null
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          applicable_categories?: string[] | null
+          applicable_services?: string[] | null
+          created_at?: string | null
+          current_uses?: number | null
+          description?: string | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_booking_amount?: number | null
+          terms_conditions?: string | null
+          title: string
+          updated_at?: string | null
+          valid_from?: string
+          valid_until: string
+        }
+        Update: {
+          applicable_categories?: string[] | null
+          applicable_services?: string[] | null
+          created_at?: string | null
+          current_uses?: number | null
+          description?: string | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_booking_amount?: number | null
+          terms_conditions?: string | null
+          title?: string
+          updated_at?: string | null
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -415,11 +475,13 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          city: string | null
           created_at: string | null
           email: string | null
           full_name: string | null
           id: string
           phone: string | null
+          preferences: Json | null
           updated_at: string | null
           user_id: string
           user_type: string | null
@@ -427,11 +489,13 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          preferences?: Json | null
           updated_at?: string | null
           user_id: string
           user_type?: string | null
@@ -439,11 +503,13 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          city?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          preferences?: Json | null
           updated_at?: string | null
           user_id?: string
           user_type?: string | null

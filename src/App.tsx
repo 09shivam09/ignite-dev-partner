@@ -5,10 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { GoogleMapsProvider } from "./components/GoogleMapsProvider";
 import Index from "./pages/Index";
 import Splash from "./pages/Splash";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import OTPVerification from "./pages/OTPVerification";
 import Search from "./pages/Search";
 import CategoryListing from "./pages/CategoryListing";
 import VendorDetails from "./pages/VendorDetails";
@@ -34,16 +37,19 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <CartProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
+    <GoogleMapsProvider>
+      <CartProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
             <Route path="/splash" element={<Splash />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/login" element={<Login />} />
             <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/signup" element={<Signup />} />
+            <Route path="/auth/otp-verification" element={<OTPVerification />} />
             <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
             <Route path="/category/:categoryId" element={<ProtectedRoute><CategoryListing /></ProtectedRoute>} />
             <Route path="/vendor/:vendorId" element={<ProtectedRoute><VendorDetails /></ProtectedRoute>} />
@@ -70,6 +76,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </CartProvider>
+    </GoogleMapsProvider>
   </QueryClientProvider>
 );
 
