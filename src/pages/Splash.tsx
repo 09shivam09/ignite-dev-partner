@@ -19,7 +19,7 @@ const Splash = () => {
     }, 20);
 
     const timer = setTimeout(() => {
-      navigate("/onboarding");
+      navigate("/landing");
     }, 2500);
 
     return () => {
