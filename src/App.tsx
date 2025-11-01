@@ -30,6 +30,7 @@ import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import Favorites from "./pages/Favorites";
 import Notifications from "./pages/Notifications";
+import Feed from "./pages/Feed";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorOrders from "./pages/vendor/VendorOrders";
 import VendorServices from "./pages/vendor/VendorServices";
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
             <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
             <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
             <Route path="/vendor/orders" element={<ProtectedRoute><VendorOrders /></ProtectedRoute>} />
             <Route path="/vendor/services" element={<ProtectedRoute><VendorServices /></ProtectedRoute>} />
