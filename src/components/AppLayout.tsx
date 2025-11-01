@@ -11,7 +11,7 @@ export const AppLayout = ({ children, showBottomNav = true }: AppLayoutProps) =>
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <AppHeader />
-      <main className="flex-1 pb-20 md:pb-6">{children}</main>
+      <main className="flex-1 pb-24">{children}</main>
       {showBottomNav && <BottomNavigation />}
     </div>
   );
