@@ -33,6 +33,11 @@ import Favorites from "./pages/Favorites";
 import Notifications from "./pages/Notifications";
 import Feed from "./pages/Feed";
 import MintNFT from "./pages/MintNFT";
+import DAODashboard from "./pages/dao/DAODashboard";
+import ProposalsList from "./pages/dao/ProposalsList";
+import ProposalDetails from "./pages/dao/ProposalDetails";
+import CreateProposal from "./pages/dao/CreateProposal";
+import DelegateVoting from "./pages/dao/DelegateVoting";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorOrders from "./pages/vendor/VendorOrders";
 import VendorServices from "./pages/vendor/VendorServices";
@@ -77,6 +82,11 @@ const App = () => (
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
             <Route path="/mint-nft" element={<ProtectedRoute><MintNFT /></ProtectedRoute>} />
+            <Route path="/dao" element={<ProtectedRoute><DAODashboard /></ProtectedRoute>} />
+            <Route path="/dao/proposals" element={<ProtectedRoute><ProposalsList /></ProtectedRoute>} />
+            <Route path="/dao/proposals/create" element={<ProtectedRoute><CreateProposal /></ProtectedRoute>} />
+            <Route path="/dao/proposals/:id" element={<ProtectedRoute><ProposalDetails /></ProtectedRoute>} />
+            <Route path="/dao/delegate" element={<ProtectedRoute><DelegateVoting /></ProtectedRoute>} />
             <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
             <Route path="/vendor/orders" element={<ProtectedRoute><VendorOrders /></ProtectedRoute>} />
             <Route path="/vendor/services" element={<ProtectedRoute><VendorServices /></ProtectedRoute>} />

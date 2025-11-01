@@ -295,6 +295,33 @@ export type Database = {
         }
         Relationships: []
       }
+      delegates: {
+        Row: {
+          created_at: string
+          delegate_id: string
+          delegator_id: string
+          id: string
+          updated_at: string
+          voting_power: number
+        }
+        Insert: {
+          created_at?: string
+          delegate_id: string
+          delegator_id: string
+          id?: string
+          updated_at?: string
+          voting_power?: number
+        }
+        Update: {
+          created_at?: string
+          delegate_id?: string
+          delegator_id?: string
+          id?: string
+          updated_at?: string
+          voting_power?: number
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           category: string | null
@@ -617,6 +644,54 @@ export type Database = {
         }
         Relationships: []
       }
+      proposals: {
+        Row: {
+          abstain_votes: number
+          created_at: string
+          creator_id: string
+          description: string
+          id: string
+          no_votes: number
+          quorum_required: number
+          status: string
+          title: string
+          updated_at: string
+          voting_ends_at: string
+          voting_starts_at: string
+          yes_votes: number
+        }
+        Insert: {
+          abstain_votes?: number
+          created_at?: string
+          creator_id: string
+          description: string
+          id?: string
+          no_votes?: number
+          quorum_required?: number
+          status?: string
+          title: string
+          updated_at?: string
+          voting_ends_at: string
+          voting_starts_at?: string
+          yes_votes?: number
+        }
+        Update: {
+          abstain_votes?: number
+          created_at?: string
+          creator_id?: string
+          description?: string
+          id?: string
+          no_votes?: number
+          quorum_required?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          voting_ends_at?: string
+          voting_starts_at?: string
+          yes_votes?: number
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_id: string
@@ -894,6 +969,41 @@ export type Database = {
             | null
         }
         Relationships: []
+      }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          proposal_id: string
+          user_id: string
+          vote_type: string
+          voting_power: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          proposal_id: string
+          user_id: string
+          vote_type: string
+          voting_power?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          proposal_id?: string
+          user_id?: string
+          vote_type?: string
+          voting_power?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
