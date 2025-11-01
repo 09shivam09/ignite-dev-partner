@@ -9,6 +9,7 @@ import { GoogleMapsProvider } from "./components/GoogleMapsProvider";
 import { AccessibilityProvider } from "./components/AccessibilityProvider";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { WalletProvider } from "./contexts/WalletContext";
 import Index from "./pages/Index";
 import Splash from "./pages/Splash";
 import Onboarding from "./pages/Onboarding";
@@ -31,6 +32,7 @@ import ProfileEdit from "./pages/ProfileEdit";
 import Favorites from "./pages/Favorites";
 import Notifications from "./pages/Notifications";
 import Feed from "./pages/Feed";
+import MintNFT from "./pages/MintNFT";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorOrders from "./pages/vendor/VendorOrders";
 import VendorServices from "./pages/vendor/VendorServices";
@@ -44,8 +46,9 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark">
         <AccessibilityProvider>
-          <GoogleMapsProvider>
-            <CartProvider>
+          <WalletProvider>
+            <GoogleMapsProvider>
+              <CartProvider>
               <TooltipProvider>
                 <Toaster />
                 <Sonner />
@@ -73,6 +76,7 @@ const App = () => (
             <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+            <Route path="/mint-nft" element={<ProtectedRoute><MintNFT /></ProtectedRoute>} />
             <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
             <Route path="/vendor/orders" element={<ProtectedRoute><VendorOrders /></ProtectedRoute>} />
             <Route path="/vendor/services" element={<ProtectedRoute><VendorServices /></ProtectedRoute>} />
@@ -82,10 +86,11 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
-          </TooltipProvider>
-        </CartProvider>
-      </GoogleMapsProvider>
-    </AccessibilityProvider>
+              </TooltipProvider>
+            </CartProvider>
+          </GoogleMapsProvider>
+        </WalletProvider>
+      </AccessibilityProvider>
       </ThemeProvider>
   </QueryClientProvider>
   </ErrorBoundary>

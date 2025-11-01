@@ -6,6 +6,8 @@ import { Menu, Moon, Sun, Bell, User, LogOut } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { WalletStatus } from "@/components/web3/WalletStatus";
+import { NetworkSwitchPrompt } from "@/components/web3/NetworkSwitchPrompt";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,8 +44,10 @@ export const AppHeader = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4">
+    <>
+      <NetworkSwitchPrompt />
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
           <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
@@ -69,6 +73,9 @@ export const AppHeader = () => {
 
         {/* Actions */}
         <div className="flex items-center space-x-2">
+          {/* Wallet Status */}
+          <WalletStatus />
+          
           {/* Theme Toggle */}
           <Button
             variant="ghost"
@@ -161,6 +168,7 @@ export const AppHeader = () => {
           </Sheet>
         </div>
       </div>
-    </header>
+      </header>
+    </>
   );
 };

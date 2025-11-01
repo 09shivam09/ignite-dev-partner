@@ -4,9 +4,12 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NFTBadge } from "@/components/web3/NFTBadge";
+import { NFTPreviewModal } from "@/components/web3/NFTPreviewModal";
+import { useWallet } from "@/contexts/WalletContext";
 import { 
   User, MapPin, Phone, Mail, CreditCard, Bell, 
-  HelpCircle, Shield, LogOut, ChevronRight, Edit 
+  HelpCircle, Shield, LogOut, ChevronRight, Edit, Award, FileText
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -16,6 +19,8 @@ const Profile = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [nftModalOpen, setNftModalOpen] = useState(false);
+  const { hasNFT } = useWallet();
 
   useEffect(() => {
     fetchProfile();
@@ -93,11 +98,23 @@ const Profile = () => {
         {/* User Info Card */}
         <Card className="p-6">
           <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20">
-              <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-20 w-20">
+                <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              {hasNFT && (
+                <div className="absolute -bottom-1 -right-1">
+                  <NFTBadge
+                    hasNFT={hasNFT}
+                    size="sm"
+                    onClick={() => setNftModalOpen(true)}
+                    showLabel={false}
+                  />
+                </div>
+              )}
+            </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold mb-1">{profile?.full_name || 'User'}</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
@@ -162,9 +179,29 @@ const Profile = () => {
           <LogOut className="h-5 w-5 mr-2" />
           Logout
         </Button>
+        
+        {/* Add Mint NFT Link */}
+        {!hasNFT && (
+          <Card className="p-4">
+            <button
+              onClick={() => navigate("/mint-nft")}
+              className="flex items-center gap-3 w-full"
+            >
+              <Award className="h-5 w-5 text-primary" />
+              <span className="flex-1 text-left">Mint Your NFT Badge</span>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </button>
+          </Card>
+        )}
       </div>
 
       <BottomNavigation />
+      
+      {/* NFT Preview Modal */}
+      <NFTPreviewModal
+        open={nftModalOpen}
+        onOpenChange={setNftModalOpen}
+      />
     </div>
   );
 };
