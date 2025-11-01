@@ -18,6 +18,7 @@ import Index from "./pages/Index";
 import Splash from "./pages/Splash";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import VendorDetails from "./pages/VendorDetails";
 
 // Lazy load other routes for code splitting
 const Landing = lazy(() => import("./pages/Landing"));
@@ -26,7 +27,6 @@ const OTPVerification = lazy(() => import("./pages/OTPVerification"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Search = lazy(() => import("./pages/Search"));
 const CategoryListing = lazy(() => import("./pages/CategoryListing"));
-const VendorDetails = lazy(() => import("./pages/VendorDetails"));
 const Booking = lazy(() => import("./pages/Booking"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Payment = lazy(() => import("./pages/Payment"));
