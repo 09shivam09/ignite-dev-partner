@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronRight, Sparkles, Shield, Calendar } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const slides = [
   {
@@ -30,7 +35,17 @@ const slides = [
 const Onboarding = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
+  const [showForm, setShowForm] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [profileData, setProfileData] = useState({
+    event_type: "",
+    city: "",
+    date: "",
+    budget_range: "",
+    guest_count: ""
+  });
 
   useEffect(() => {
     // Reset animation on slide change
@@ -45,7 +60,44 @@ const Onboarding = () => {
       setDirection('next');
       setCurrentSlide(currentSlide + 1);
     } else {
-      navigate("/auth/signup");
+      setShowForm(true);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth/signup");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          preferences: profileData,
+          city: profileData.city
+        });
+
+      if (error) throw error;
+
+      // Store in localStorage as well
+      localStorage.setItem('onboarding_data', JSON.stringify(profileData));
+
+      toast({
+        title: "Profile saved!",
+        description: "Your preferences have been saved successfully."
+      });
+      
+      navigate("/");
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -57,10 +109,101 @@ const Onboarding = () => {
   };
 
   const handleSkip = () => {
-    navigate("/auth/signup");
+    if (showForm) {
+      navigate("/");
+    } else {
+      navigate("/auth/signup");
+    }
   };
 
   const CurrentIcon = slides[currentSlide].icon;
+
+  if (showForm) {
+    return (
+      <div className="flex min-h-screen flex-col bg-gradient-to-br from-background via-primary/5 to-accent/10 p-6">
+        <div className="flex justify-end mb-4">
+          <Button variant="ghost" onClick={handleSkip}>
+            Skip
+          </Button>
+        </div>
+        
+        <div className="max-w-md mx-auto w-full space-y-6">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">Tell us about your event</h1>
+            <p className="text-muted-foreground">Help us personalize your experience</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="event_type">Event Type</Label>
+              <Select value={profileData.event_type} onValueChange={(val) => setProfileData({...profileData, event_type: val})}>
+                <SelectTrigger id="event_type">
+                  <SelectValue placeholder="Select event type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="wedding">Wedding</SelectItem>
+                  <SelectItem value="birthday">Birthday</SelectItem>
+                  <SelectItem value="corporate">Corporate Event</SelectItem>
+                  <SelectItem value="anniversary">Anniversary</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                placeholder="Enter your city"
+                value={profileData.city}
+                onChange={(e) => setProfileData({...profileData, city: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="date">Event Date (Optional)</Label>
+              <Input
+                id="date"
+                type="date"
+                value={profileData.date}
+                onChange={(e) => setProfileData({...profileData, date: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="budget_range">Budget Range</Label>
+              <Select value={profileData.budget_range} onValueChange={(val) => setProfileData({...profileData, budget_range: val})}>
+                <SelectTrigger id="budget_range">
+                  <SelectValue placeholder="Select budget range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0-50000">₹0 - ₹50,000</SelectItem>
+                  <SelectItem value="50000-100000">₹50,000 - ₹1,00,000</SelectItem>
+                  <SelectItem value="100000-200000">₹1,00,000 - ₹2,00,000</SelectItem>
+                  <SelectItem value="200000+">₹2,00,000+</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="guest_count">Expected Guest Count</Label>
+              <Input
+                id="guest_count"
+                type="number"
+                placeholder="Number of guests"
+                value={profileData.guest_count}
+                onChange={(e) => setProfileData({...profileData, guest_count: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <Button onClick={handleSaveProfile} className="w-full" size="lg">
+            Save & Continue
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-background via-primary/5 to-accent/10 overflow-hidden">

@@ -54,6 +54,7 @@ const InspirationGallery = lazy(() => import("./pages/InspirationGallery"));
 const VendorCompare = lazy(() => import("./pages/VendorCompare"));
 const AIEventPlanner = lazy(() => import("./pages/AIEventPlanner"));
 const VendorVerification = lazy(() => import("./pages/VendorVerification"));
+const PlannerToolkit = lazy(() => import("./pages/PlannerToolkit"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const LoadingFallback = () => (
@@ -120,6 +121,7 @@ const App = () => (
                         <Route path="/inspiration" element={<ProtectedRoute><InspirationGallery /></ProtectedRoute>} />
                         <Route path="/compare" element={<ProtectedRoute><VendorCompare /></ProtectedRoute>} />
                         <Route path="/ai-planner" element={<ProtectedRoute><AIEventPlanner /></ProtectedRoute>} />
+                        <Route path="/toolkit" element={<ProtectedRoute><PlannerToolkit /></ProtectedRoute>} />
                         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
