@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Clock, Users } from "lucide-react";
 import { VotingInterface } from "@/components/dao/VotingInterface";
 import { VoteResultsChart } from "@/components/dao/VoteResultsChart";
-import { CommentSection } from "@/components/social/CommentSection";
+import { ProposalCommentSection } from "@/components/dao/ProposalCommentSection";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -171,7 +171,7 @@ export default function ProposalDetails() {
             <CardTitle>Discussion</CardTitle>
           </CardHeader>
           <CardContent>
-            <CommentSection postId={proposal.id} onUpdate={() => {}} />
+            <ProposalCommentSection proposalId={proposal.id} />
           </CardContent>
         </Card>
       </div>
