@@ -56,22 +56,37 @@ export const ProposalCommentSection = ({ proposalId }: ProposalCommentSectionPro
 
   const fetchComments = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: commentsData, error: commentsError } = await supabase
         .from("proposal_comments")
-        .select(
-          `
-          *,
-          profiles!proposal_comments_user_id_fkey (
-            full_name,
-            avatar_url
-          )
-        `
-        )
+        .select("*")
         .eq("proposal_id", proposalId)
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
-      setComments(data || []);
+      if (commentsError) throw commentsError;
+
+      // Fetch profiles for all unique user_ids
+      const userIds = [...new Set(commentsData?.map(c => c.user_id) || [])];
+      
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Merge comments with profiles
+      const commentsWithProfiles = commentsData?.map(comment => {
+        const profile = profilesData?.find(p => p.user_id === comment.user_id);
+        return {
+          ...comment,
+          profiles: profile ? {
+            full_name: profile.full_name || "",
+            avatar_url: profile.avatar_url || ""
+          } : undefined
+        };
+      }) || [];
+
+      setComments(commentsWithProfiles);
     } catch (error: any) {
       console.error("Error fetching comments:", error);
     } finally {
