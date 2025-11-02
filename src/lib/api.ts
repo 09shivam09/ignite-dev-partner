@@ -218,9 +218,14 @@ export const bookingAPI = {
     return data;
   },
   
-  initiatePayment: async (bookingId: string, amount: number) => {
+  initiatePayment: async (bookingId: string, amount?: number, provider: 'razorpay' | 'stripe' = 'razorpay') => {
     const { data, error } = await supabase.functions.invoke('payment-process', {
-      body: { booking_id: bookingId, amount }
+      body: { 
+        booking_id: bookingId, 
+        amount,
+        payment_provider: provider,
+        payment_method: 'card'
+      }
     });
     if (error) throw error;
     return data;
@@ -266,7 +271,14 @@ export const inspirationAPI = {
 
 // AI Endpoints
 export const aiAPI = {
-  planEvent: async (eventData: any) => {
+  planEvent: async (eventData: {
+    event_type: string;
+    guest_count: number;
+    location: string;
+    budget: number;
+    style_reference_image?: string;
+    preferences?: string;
+  }) => {
     const { data, error } = await supabase.functions.invoke('ai-recommendations', {
       body: eventData
     });

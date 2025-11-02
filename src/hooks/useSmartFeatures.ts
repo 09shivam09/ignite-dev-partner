@@ -1,12 +1,14 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// AI Recommendations
+// AI Event Planner
 export const useAIRecommendations = (params: {
   event_type?: string;
   guest_count?: number;
   location?: string;
   budget?: number;
+  style_reference_image?: string;
+  preferences?: string;
 }) => {
   return useQuery({
     queryKey: ["ai-recommendations", params],
@@ -18,6 +20,23 @@ export const useAIRecommendations = (params: {
       return data;
     },
     enabled: !!(params.event_type || params.location),
+  });
+};
+
+// AI Style Matching
+export const useStyleMatch = () => {
+  return useMutation({
+    mutationFn: async (params: {
+      image_url?: string;
+      description?: string;
+      preferences?: any;
+    }) => {
+      const { data, error } = await supabase.functions.invoke("ai-style-match", {
+        body: params,
+      });
+      if (error) throw error;
+      return data;
+    },
   });
 };
 
