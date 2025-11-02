@@ -21,3 +21,66 @@ enable_confirmations = false
 
 [functions.ai-support]
 verify_jwt = false
+
+[functions.ai-recommendations]
+verify_jwt = true
+
+[functions.ai-style-match]
+verify_jwt = true
+
+[functions.vendor-search]
+verify_jwt = false
+
+[functions.vendor-portfolio]
+verify_jwt = false
+
+[functions.leads-manage]
+verify_jwt = true
+
+[functions.chat-messages]
+verify_jwt = true
+
+[functions.booking-create]
+verify_jwt = true
+
+[functions.booking-manage]
+verify_jwt = true
+
+[functions.booking-history]
+verify_jwt = true
+
+[functions.payment-process]
+verify_jwt = true
+
+[functions.inspiration-gallery]
+verify_jwt = false
+
+[functions.review-add]
+verify_jwt = true
+
+[functions.review-insights]
+verify_jwt = false
+
+[functions.services-api]
+verify_jwt = false
+
+[functions.user-profile]
+verify_jwt = true
+
+[functions.offers-list]
+verify_jwt = false
+
+[functions.analytics-track]
+verify_jwt = false
+
+[functions.notification-send]
+verify_jwt = true
+
+[functions.whatsapp-notify]
+verify_jwt = true
+
+[functions.google-calendar-sync]
+verify_jwt = true
+
+[functions.send-booking-confirmation]
+verify_jwt = true
