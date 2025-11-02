@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Bell, LogOut } from "lucide-react";
+import { MapPin, Search, Bell, LogOut, Sparkles, GitCompare, Image } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -17,6 +17,7 @@ import { SmartRecommendations } from "@/components/SmartRecommendations";
 import { analytics } from "@/lib/analytics";
 import { setUserContext } from "@/lib/sentry";
 import { AccessibilitySettings } from "@/components/AccessibilitySettings";
+import { Card } from "@/components/ui/card";
 import heroImage from "@/assets/hero-event-premium.jpg";
 import vendorPhotographer from "@/assets/vendor-photographer.jpg";
 import vendorCatering from "@/assets/vendor-catering.jpg";
@@ -131,6 +132,57 @@ const Index = () => {
           >
             Explore Services
           </Button>
+        </div>
+      </div>
+
+      {/* Quick Access Tools */}
+      <div className="px-6 pb-6">
+        <h2 className="text-2xl font-bold mb-4">Planning Tools</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card 
+            className="p-5 cursor-pointer hover:shadow-lg transition-all group"
+            onClick={() => navigate("/ai-planner")}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Sparkles className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold mb-1">AI Event Planner</h3>
+                <p className="text-sm text-muted-foreground">Get personalized recommendations</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card 
+            className="p-5 cursor-pointer hover:shadow-lg transition-all group"
+            onClick={() => navigate("/compare")}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <GitCompare className="h-6 w-6 text-accent" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold mb-1">Compare Vendors</h3>
+                <p className="text-sm text-muted-foreground">Side-by-side comparison</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card 
+            className="p-5 cursor-pointer hover:shadow-lg transition-all group"
+            onClick={() => navigate("/inspiration")}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Image className="h-6 w-6 text-purple-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold mb-1">Inspiration Gallery</h3>
+                <p className="text-sm text-muted-foreground">Browse event ideas</p>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
 

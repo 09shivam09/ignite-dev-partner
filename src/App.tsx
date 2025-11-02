@@ -50,6 +50,10 @@ const VendorDashboard = lazy(() => import("./pages/vendor/VendorDashboard"));
 const VendorOrders = lazy(() => import("./pages/vendor/VendorOrders"));
 const VendorServices = lazy(() => import("./pages/vendor/VendorServices"));
 const VendorAnalytics = lazy(() => import("./pages/vendor/VendorAnalytics"));
+const InspirationGallery = lazy(() => import("./pages/InspirationGallery"));
+const VendorCompare = lazy(() => import("./pages/VendorCompare"));
+const AIEventPlanner = lazy(() => import("./pages/AIEventPlanner"));
+const VendorVerification = lazy(() => import("./pages/VendorVerification"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const LoadingFallback = () => (
@@ -112,6 +116,10 @@ const App = () => (
                         <Route path="/vendor/orders" element={<ProtectedRoute><VendorOrders /></ProtectedRoute>} />
                         <Route path="/vendor/services" element={<ProtectedRoute><VendorServices /></ProtectedRoute>} />
                         <Route path="/vendor/analytics" element={<ProtectedRoute><VendorAnalytics /></ProtectedRoute>} />
+                        <Route path="/vendor/verification" element={<ProtectedRoute><VendorVerification /></ProtectedRoute>} />
+                        <Route path="/inspiration" element={<ProtectedRoute><InspirationGallery /></ProtectedRoute>} />
+                        <Route path="/compare" element={<ProtectedRoute><VendorCompare /></ProtectedRoute>} />
+                        <Route path="/ai-planner" element={<ProtectedRoute><AIEventPlanner /></ProtectedRoute>} />
                         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
