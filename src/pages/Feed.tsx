@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, Play } from "lucide-react";
 import { FeedContainer } from "@/components/social/FeedContainer";
+import { TrendingSection } from "@/components/social/TrendingSection";
 import { ReelsFeed } from "@/components/social/ReelsFeed";
 import { CreatePostModal } from "@/components/social/CreatePostModal";
 import { MediaUploader } from "@/components/media/MediaUploader";
@@ -77,35 +78,40 @@ export default function Feed() {
             </div>
           </div>
 
-        {/* Feed Type Tabs */}
-        <Tabs value={feedType} onValueChange={(v) => setFeedType(v as FeedType)}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="following">Following</TabsTrigger>
-            <TabsTrigger value="discover">Discover</TabsTrigger>
-            <TabsTrigger value="events">Events</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="following" className="mt-6">
-            <FeedContainer 
-              type="following" 
-              onCreatePost={() => setIsCreateModalOpen(true)}
-            />
-          </TabsContent>
-          
-          <TabsContent value="discover" className="mt-6">
-            <FeedContainer 
-              type="discover" 
-              onCreatePost={() => setIsCreateModalOpen(true)}
-            />
-          </TabsContent>
-          
-          <TabsContent value="events" className="mt-6">
-            <FeedContainer 
-              type="events" 
-              onCreatePost={() => setIsCreateModalOpen(true)}
-            />
-          </TabsContent>
-        </Tabs>
+          {/* Trending Section - Only show on Discover tab */}
+          {feedType === 'discover' && (
+            <TrendingSection />
+          )}
+
+          {/* Feed Type Tabs */}
+          <Tabs value={feedType} onValueChange={(v) => setFeedType(v as FeedType)}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="following">Following</TabsTrigger>
+              <TabsTrigger value="discover">Discover</TabsTrigger>
+              <TabsTrigger value="events">Events</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="following" className="mt-6">
+              <FeedContainer 
+                type="following" 
+                onCreatePost={() => setIsCreateModalOpen(true)}
+              />
+            </TabsContent>
+            
+            <TabsContent value="discover" className="mt-6">
+              <FeedContainer 
+                type="discover" 
+                onCreatePost={() => setIsCreateModalOpen(true)}
+              />
+            </TabsContent>
+            
+            <TabsContent value="events" className="mt-6">
+              <FeedContainer 
+                type="events" 
+                onCreatePost={() => setIsCreateModalOpen(true)}
+              />
+            </TabsContent>
+          </Tabs>
 
         {/* Media Upload Section */}
         {isMediaUploadOpen && (
