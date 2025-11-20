@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Grid3x3, List } from "lucide-react";
 import { PostCard } from "@/components/social/PostCard";
+import { MediaGrid } from "@/components/media/MediaGrid";
 import { CreatePostModal } from "@/components/social/CreatePostModal";
 import { MediaUploader } from "@/components/media/MediaUploader";
 import { NotificationDrawer } from "@/components/social/NotificationDrawer";
@@ -18,6 +19,7 @@ const POSTS_PER_PAGE = 10;
 export default function Feed() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isMediaUploadOpen, setIsMediaUploadOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
@@ -40,10 +42,9 @@ export default function Feed() {
           profiles!posts_user_id_fkey (
             full_name,
             avatar_url
-          ),
-          likes (count),
-          comments (count)
+          )
         `)
+        .eq("moderation_status", "approved")
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -105,6 +106,17 @@ export default function Feed() {
             >
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            >
+              {viewMode === 'grid' ? (
+                <List className="h-4 w-4" />
+              ) : (
+                <Grid3x3 className="h-4 w-4" />
+              )}
+            </Button>
             <NotificationDrawer />
             <Button 
               variant={isMediaUploadOpen ? "secondary" : "default"}
@@ -138,6 +150,8 @@ export default function Feed() {
             actionLabel="Create Post"
             onAction={() => setIsCreateModalOpen(true)}
           />
+        ) : viewMode === 'grid' ? (
+          <MediaGrid posts={posts} onUpdate={refetch} />
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
