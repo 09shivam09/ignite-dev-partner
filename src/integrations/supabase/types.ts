@@ -322,6 +322,53 @@ export type Database = {
         }
         Relationships: []
       }
+      events: {
+        Row: {
+          created_at: string | null
+          creator_id: string
+          description: string | null
+          event_date: string | null
+          event_type: string | null
+          id: string
+          is_public: boolean | null
+          location: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_id: string
+          description?: string | null
+          event_date?: string | null
+          event_type?: string | null
+          id?: string
+          is_public?: boolean | null
+          location?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_id?: string
+          description?: string | null
+          event_date?: string | null
+          event_type?: string | null
+          id?: string
+          is_public?: boolean | null
+          location?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           category: string | null
@@ -387,6 +434,54 @@ export type Database = {
           },
         ]
       }
+      media_views: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          device_type: string | null
+          id: string
+          post_id: string
+          session_id: string | null
+          user_id: string | null
+          watch_duration_seconds: number | null
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          post_id: string
+          session_id?: string | null
+          user_id?: string | null
+          watch_duration_seconds?: number | null
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          post_id?: string
+          session_id?: string | null
+          user_id?: string | null
+          watch_duration_seconds?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_views_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           attachments: string[] | null
@@ -422,6 +517,60 @@ export type Database = {
           sender_id?: string
         }
         Relationships: []
+      }
+      moderation_queue: {
+        Row: {
+          action: string | null
+          confidence_score: number | null
+          created_at: string | null
+          flagged_reason: string | null
+          id: string
+          notes: string | null
+          post_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          action?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          flagged_reason?: string | null
+          id?: string
+          notes?: string | null
+          post_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          action?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          flagged_reason?: string | null
+          id?: string
+          notes?: string | null
+          post_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_queue_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_queue_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -574,30 +723,89 @@ export type Database = {
       }
       posts: {
         Row: {
+          comment_count: number | null
           content: string
           created_at: string
+          duration_seconds: number | null
+          event_id: string | null
+          file_size_bytes: number | null
+          height: number | null
           id: string
+          like_count: number | null
+          media_type: string | null
           media_urls: string[] | null
+          mime_type: string | null
+          moderation_status: string | null
+          mux_asset_id: string | null
+          mux_playback_id: string | null
+          processing_status: string | null
+          storage_path: string | null
+          thumbnail_url: string | null
+          title: string | null
           updated_at: string
           user_id: string
+          view_count: number | null
+          width: number | null
         }
         Insert: {
+          comment_count?: number | null
           content: string
           created_at?: string
+          duration_seconds?: number | null
+          event_id?: string | null
+          file_size_bytes?: number | null
+          height?: number | null
           id?: string
+          like_count?: number | null
+          media_type?: string | null
           media_urls?: string[] | null
+          mime_type?: string | null
+          moderation_status?: string | null
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          processing_status?: string | null
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
           updated_at?: string
           user_id: string
+          view_count?: number | null
+          width?: number | null
         }
         Update: {
+          comment_count?: number | null
           content?: string
           created_at?: string
+          duration_seconds?: number | null
+          event_id?: string | null
+          file_size_bytes?: number | null
+          height?: number | null
           id?: string
+          like_count?: number | null
+          media_type?: string | null
           media_urls?: string[] | null
+          mime_type?: string | null
+          moderation_status?: string | null
+          mux_asset_id?: string | null
+          mux_playback_id?: string | null
+          processing_status?: string | null
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          title?: string | null
           updated_at?: string
           user_id?: string
+          view_count?: number | null
+          width?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "posts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
