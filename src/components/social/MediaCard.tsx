@@ -1,12 +1,19 @@
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Share2 } from 'lucide-react';
+import { MessageCircle, Share2, MoreVertical, Flag } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
 import { LikeButton } from './LikeButton';
 import { BookmarkButton } from './BookmarkButton';
 import { FollowButton } from './FollowButton';
 import { CommentSection } from './CommentSection';
+import { ReportModal } from './ReportModal';
 import { MediaPlayer } from '@/components/media/MediaPlayer';
 import { useState } from 'react';
 import type { FeedPost } from '@/hooks/useFeed';
@@ -21,6 +28,7 @@ interface MediaCardProps {
 
 export function MediaCard({ post, index = 0, onUpdate }: MediaCardProps) {
   const [showComments, setShowComments] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [isFollowing, setIsFollowing] = useState(post.user.is_following);
 
   const handleShare = async () => {
@@ -70,15 +78,33 @@ export function MediaCard({ post, index = 0, onUpdate }: MediaCardProps) {
               </p>
             </div>
           </div>
-          {!isFollowing && (
-            <FollowButton
-              userId={post.user.id}
-              isFollowing={isFollowing}
-              onFollowChange={setIsFollowing}
-              variant="outline"
-              size="sm"
-            />
-          )}
+          <div className="flex items-center gap-2">
+            {!isFollowing && (
+              <FollowButton
+                userId={post.user.id}
+                isFollowing={isFollowing}
+                onFollowChange={setIsFollowing}
+                variant="outline"
+                size="sm"
+              />
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => setShowReportModal(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Flag className="h-4 w-4 mr-2" />
+                  Report post
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
         {post.title && (
           <h3 className="font-semibold mt-2">{post.title}</h3>
@@ -154,6 +180,13 @@ export function MediaCard({ post, index = 0, onUpdate }: MediaCardProps) {
           </div>
         )}
       </CardFooter>
+
+      {/* Report Modal */}
+      <ReportModal
+        postId={post.id}
+        open={showReportModal}
+        onOpenChange={setShowReportModal}
+      />
     </Card>
   );
 }
