@@ -1,4 +1,5 @@
-import { useRef, useEffect } from 'react';
+import { useEffect } from 'react';
+import { Virtuoso } from 'react-virtuoso';
 import { Loader2 } from 'lucide-react';
 import { MediaCard } from './MediaCard';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -22,8 +23,6 @@ export function FeedContainer({ type = 'following', eventId, onCreatePost }: Fee
     refetch,
   } = useFeed(type, eventId);
 
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-
   // Flatten pages into single array
   const posts = data?.pages.flatMap(page => page?.data || []) || [];
 
@@ -31,24 +30,6 @@ export function FeedContainer({ type = 'following', eventId, onCreatePost }: Fee
   const uniquePosts = posts.filter((post, index, self) => 
     index === self.findIndex(p => p.id === post.id)
   );
-
-  // Infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Prefetch thumbnails for next 3 posts
   useEffect(() => {
@@ -92,22 +73,32 @@ export function FeedContainer({ type = 'following', eventId, onCreatePost }: Fee
   }
 
   return (
-    <div className="space-y-6">
-      {uniquePosts.map((post, index) => (
-        <MediaCard 
-          key={post.id} 
-          post={post} 
-          index={index}
-          onUpdate={refetch}
-        />
-      ))}
-
-      {/* Infinite scroll trigger */}
-      <div ref={loadMoreRef} className="flex justify-center py-8">
-        {isFetchingNextPage && (
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        )}
-      </div>
-    </div>
+    <Virtuoso
+      data={uniquePosts}
+      endReached={() => {
+        if (hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      }}
+      overscan={200}
+      itemContent={(index, post) => (
+        <div className="mb-6">
+          <MediaCard 
+            post={post} 
+            index={index}
+            onUpdate={refetch}
+          />
+        </div>
+      )}
+      components={{
+        Footer: () => (
+          isFetchingNextPage ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : null
+        ),
+      }}
+    />
   );
 }

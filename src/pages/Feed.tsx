@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Play } from "lucide-react";
 import { FeedContainer } from "@/components/social/FeedContainer";
+import { ReelsFeed } from "@/components/social/ReelsFeed";
 import { CreatePostModal } from "@/components/social/CreatePostModal";
 import { MediaUploader } from "@/components/media/MediaUploader";
 import { NotificationDrawer } from "@/components/social/NotificationDrawer";
@@ -14,6 +15,7 @@ export default function Feed() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isMediaUploadOpen, setIsMediaUploadOpen] = useState(false);
   const [feedType, setFeedType] = useState<FeedType>('following');
+  const [viewMode, setViewMode] = useState<'feed' | 'reels'>('feed');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { refetch } = useFeed(feedType);
@@ -27,39 +29,53 @@ export default function Feed() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Social Feed</h1>
-            <p className="text-muted-foreground">Connect with the community</p>
+      {viewMode === 'reels' ? (
+        <ReelsFeed 
+          type={feedType}
+          onCreatePost={() => setIsCreateModalOpen(true)}
+        />
+      ) : (
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Social Feed</h1>
+              <p className="text-muted-foreground">Connect with the community</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setViewMode(viewMode === 'feed' ? 'reels' : 'feed')}
+                title={viewMode === 'feed' ? 'Switch to Reels' : 'Switch to Feed'}
+              >
+                <Play className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePullToRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              </Button>
+              <NotificationDrawer />
+              <Button 
+                variant={isMediaUploadOpen ? "secondary" : "default"}
+                onClick={() => setIsMediaUploadOpen(!isMediaUploadOpen)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {isMediaUploadOpen ? 'Cancel Upload' : 'Upload Media'}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Text Post
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePullToRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            </Button>
-            <NotificationDrawer />
-            <Button 
-              variant={isMediaUploadOpen ? "secondary" : "default"}
-              onClick={() => setIsMediaUploadOpen(!isMediaUploadOpen)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {isMediaUploadOpen ? 'Cancel Upload' : 'Upload Media'}
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Text Post
-            </Button>
-          </div>
-        </div>
 
         {/* Feed Type Tabs */}
         <Tabs value={feedType} onValueChange={(v) => setFeedType(v as FeedType)}>
@@ -104,13 +120,15 @@ export default function Feed() {
           </div>
         )}
 
-        {/* Create Post Modal */}
-        <CreatePostModal
-          open={isCreateModalOpen}
-          onOpenChange={setIsCreateModalOpen}
-          onSuccess={refetch}
-        />
-      </div>
+        </div>
+      )}
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onSuccess={refetch}
+      />
     </AppLayout>
   );
 }
