@@ -152,6 +152,42 @@ export type Database = {
           },
         ]
       }
+      bookmarks: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -405,6 +441,42 @@ export type Database = {
         }
         Relationships: []
       }
+      follows: {
+        Row: {
+          created_at: string | null
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       likes: {
         Row: {
           created_at: string
@@ -427,6 +499,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_renditions: {
+        Row: {
+          bitrate_kbps: number | null
+          created_at: string | null
+          file_size_bytes: number | null
+          height: number | null
+          id: string
+          post_id: string
+          quality: string
+          storage_path: string
+          width: number | null
+        }
+        Insert: {
+          bitrate_kbps?: number | null
+          created_at?: string | null
+          file_size_bytes?: number | null
+          height?: number | null
+          id?: string
+          post_id: string
+          quality: string
+          storage_path: string
+          width?: number | null
+        }
+        Update: {
+          bitrate_kbps?: number | null
+          created_at?: string | null
+          file_size_bytes?: number | null
+          height?: number | null
+          id?: string
+          post_id?: string
+          quality?: string
+          storage_path?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_renditions_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"
@@ -721,6 +837,44 @@ export type Database = {
           },
         ]
       }
+      post_engagement: {
+        Row: {
+          comments_weight: number | null
+          engagement_score: number | null
+          likes_weight: number | null
+          post_id: string
+          shares_count: number | null
+          updated_at: string | null
+          views_weight: number | null
+        }
+        Insert: {
+          comments_weight?: number | null
+          engagement_score?: number | null
+          likes_weight?: number | null
+          post_id: string
+          shares_count?: number | null
+          updated_at?: string | null
+          views_weight?: number | null
+        }
+        Update: {
+          comments_weight?: number | null
+          engagement_score?: number | null
+          likes_weight?: number | null
+          post_id?: string
+          shares_count?: number | null
+          updated_at?: string | null
+          views_weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_engagement_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           comment_count: number | null
@@ -814,6 +968,8 @@ export type Database = {
           city: string | null
           created_at: string | null
           email: string | null
+          follower_count: number | null
+          following_count: number | null
           full_name: string | null
           id: string
           phone: string | null
@@ -828,6 +984,8 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           email?: string | null
+          follower_count?: number | null
+          following_count?: number | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -842,6 +1000,8 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           email?: string | null
+          follower_count?: number | null
+          following_count?: number | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -944,6 +1104,64 @@ export type Database = {
           yes_votes?: number
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          post_id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          post_id: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          post_id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -1431,6 +1649,10 @@ export type Database = {
             }
             Returns: string
           }
+      calculate_engagement_score: {
+        Args: { p_post_id: string }
+        Returns: number
+      }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {
