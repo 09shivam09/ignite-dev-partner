@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw } from "lucide-react";
 import { PostCard } from "@/components/social/PostCard";
 import { CreatePostModal } from "@/components/social/CreatePostModal";
+import { MediaUploader } from "@/components/media/MediaUploader";
 import { NotificationDrawer } from "@/components/social/NotificationDrawer";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +17,7 @@ const POSTS_PER_PAGE = 10;
 
 export default function Feed() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isMediaUploadOpen, setIsMediaUploadOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
@@ -104,9 +106,19 @@ export default function Feed() {
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             </Button>
             <NotificationDrawer />
-            <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Button 
+              variant={isMediaUploadOpen ? "secondary" : "default"}
+              onClick={() => setIsMediaUploadOpen(!isMediaUploadOpen)}
+            >
               <Plus className="h-4 w-4 mr-2" />
-              Create Post
+              {isMediaUploadOpen ? 'Cancel Upload' : 'Upload Media'}
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Text Post
             </Button>
           </div>
         </div>
@@ -148,6 +160,24 @@ export default function Feed() {
           >
             {isFetchingNextPage ? "Loading..." : "Load More"}
           </Button>
+        )}
+
+        {/* Media Upload Section */}
+        {isMediaUploadOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-6"
+          >
+            <MediaUploader
+              onSuccess={() => {
+                refetch();
+                setIsMediaUploadOpen(false);
+                toast.success('Media uploaded successfully!');
+              }}
+            />
+          </motion.div>
         )}
 
         {/* Create Post Modal */}
