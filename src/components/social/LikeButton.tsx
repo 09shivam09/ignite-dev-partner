@@ -8,11 +8,12 @@ import { toast } from "sonner";
 interface LikeButtonProps {
   postId: string;
   initialLikes: number;
-  onUpdate: () => void;
+  initialLiked?: boolean;
+  onUpdate?: () => void;
 }
 
-export const LikeButton = ({ postId, initialLikes, onUpdate }: LikeButtonProps) => {
-  const [isLiked, setIsLiked] = useState(false);
+export const LikeButton = ({ postId, initialLikes, initialLiked = false, onUpdate }: LikeButtonProps) => {
+  const [isLiked, setIsLiked] = useState(initialLiked);
   const [likesCount, setLikesCount] = useState(initialLikes);
   const [isLoading, setIsLoading] = useState(false);
 

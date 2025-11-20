@@ -1,83 +1,22 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Grid3x3, List } from "lucide-react";
-import { PostCard } from "@/components/social/PostCard";
-import { MediaGrid } from "@/components/media/MediaGrid";
+import { Plus, RefreshCw } from "lucide-react";
+import { FeedContainer } from "@/components/social/FeedContainer";
 import { CreatePostModal } from "@/components/social/CreatePostModal";
 import { MediaUploader } from "@/components/media/MediaUploader";
 import { NotificationDrawer } from "@/components/social/NotificationDrawer";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AppLayout } from "@/components/AppLayout";
-import { motion } from "framer-motion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-
-const POSTS_PER_PAGE = 10;
+import { useFeed, type FeedType } from "@/hooks/useFeed";
 
 export default function Feed() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isMediaUploadOpen, setIsMediaUploadOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [feedType, setFeedType] = useState<FeedType>('following');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    refetch,
-    isLoading,
-  } = useInfiniteQuery({
-    queryKey: ["posts"],
-    queryFn: async ({ pageParam = 0 }) => {
-      const from = pageParam * POSTS_PER_PAGE;
-      const to = from + POSTS_PER_PAGE - 1;
-
-      const { data, error } = await supabase
-        .from("posts")
-        .select(`
-          *,
-          profiles!posts_user_id_fkey (
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq("moderation_status", "approved")
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (error) throw error;
-      return data;
-    },
-    getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === POSTS_PER_PAGE ? allPages.length : undefined;
-    },
-    initialPageParam: 0,
-  });
-
-  // Real-time updates
-  useEffect(() => {
-    const channel = supabase
-      .channel("posts-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "posts",
-        },
-        () => {
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetch]);
+  const { refetch } = useFeed(feedType);
 
   const handlePullToRefresh = async () => {
     setIsRefreshing(true);
@@ -85,8 +24,6 @@ export default function Feed() {
     setIsRefreshing(false);
     toast.success("Feed refreshed!");
   };
-
-  const posts = data?.pages.flatMap((page) => page) || [];
 
   return (
     <AppLayout>
@@ -106,17 +43,6 @@ export default function Feed() {
             >
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            >
-              {viewMode === 'grid' ? (
-                <List className="h-4 w-4" />
-              ) : (
-                <Grid3x3 className="h-4 w-4" />
-              )}
-            </Button>
             <NotificationDrawer />
             <Button 
               variant={isMediaUploadOpen ? "secondary" : "default"}
@@ -135,55 +61,39 @@ export default function Feed() {
           </div>
         </div>
 
-        {/* Posts Feed */}
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-64 w-full" />
-            ))}
-          </div>
-        ) : posts.length === 0 ? (
-          <EmptyState
-            icon={Plus}
-            title="No posts yet"
-            description="Be the first to share something with the community!"
-            actionLabel="Create Post"
-            onAction={() => setIsCreateModalOpen(true)}
-          />
-        ) : viewMode === 'grid' ? (
-          <MediaGrid />
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-6"
-          >
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} onUpdate={refetch} />
-            ))}
-          </motion.div>
-        )}
-
-        {/* Load More */}
-        {hasNextPage && (
-          <Button
-            variant="outline"
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-            className="w-full"
-          >
-            {isFetchingNextPage ? "Loading..." : "Load More"}
-          </Button>
-        )}
+        {/* Feed Type Tabs */}
+        <Tabs value={feedType} onValueChange={(v) => setFeedType(v as FeedType)}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="following">Following</TabsTrigger>
+            <TabsTrigger value="discover">Discover</TabsTrigger>
+            <TabsTrigger value="events">Events</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="following" className="mt-6">
+            <FeedContainer 
+              type="following" 
+              onCreatePost={() => setIsCreateModalOpen(true)}
+            />
+          </TabsContent>
+          
+          <TabsContent value="discover" className="mt-6">
+            <FeedContainer 
+              type="discover" 
+              onCreatePost={() => setIsCreateModalOpen(true)}
+            />
+          </TabsContent>
+          
+          <TabsContent value="events" className="mt-6">
+            <FeedContainer 
+              type="events" 
+              onCreatePost={() => setIsCreateModalOpen(true)}
+            />
+          </TabsContent>
+        </Tabs>
 
         {/* Media Upload Section */}
         {isMediaUploadOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="mb-6"
-          >
+          <div className="mt-6">
             <MediaUploader
               onSuccess={() => {
                 refetch();
@@ -191,7 +101,7 @@ export default function Feed() {
                 toast.success('Media uploaded successfully!');
               }}
             />
-          </motion.div>
+          </div>
         )}
 
         {/* Create Post Modal */}
