@@ -59,10 +59,12 @@ Deno.serve(async (req) => {
           user_id,
           full_name,
           avatar_url
+        ),
+        post_engagement (
+          engagement_score
         )
       `)
       .eq('moderation_status', 'approved')
-      .order('created_at', { ascending: false })
       .limit(limit + 1); // Fetch one extra to determine has_more
 
     // Apply feed type filters
@@ -84,12 +86,32 @@ Deno.serve(async (req) => {
       }
 
       query = query.in('user_id', followingIds);
+      query = query.order('created_at', { ascending: false });
     } else if (type === 'events' && event_id) {
       query = query.eq('event_id', event_id);
+      query = query.order('created_at', { ascending: false });
     } else if (type === 'discover') {
-      // For discover feed, we'll join with engagement scores
-      // For now, just show all approved posts (can enhance with ranking later)
-      query = query.not('media_type', 'is', null); // Only media posts
+      // For discover feed, order by engagement score
+      // Only show posts with media
+      query = query.not('media_type', 'is', null);
+      
+      // Join with engagement scores and filter posts with score > 10
+      const { data: topEngagements } = await supabaseClient
+        .from('post_engagement')
+        .select('post_id, engagement_score')
+        .gte('engagement_score', 10) // Minimum score threshold
+        .order('engagement_score', { ascending: false })
+        .limit(100); // Get top 100 engaging posts
+
+      if (topEngagements && topEngagements.length > 0) {
+        const topPostIds = topEngagements.map(e => e.post_id);
+        query = query.in('id', topPostIds);
+      }
+      
+      // Note: We can't order by engagement_score directly in the query
+      // We'll sort after fetching
+    } else {
+      query = query.order('created_at', { ascending: false });
     }
 
     // Apply cursor pagination
@@ -101,9 +123,23 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
+    // For discover feed, sort by engagement score
+    let sortedPosts = posts || [];
+    if (type === 'discover') {
+      sortedPosts.sort((a, b) => {
+        const scoreA = Array.isArray(a.post_engagement) && a.post_engagement[0]
+          ? a.post_engagement[0].engagement_score 
+          : 0;
+        const scoreB = Array.isArray(b.post_engagement) && b.post_engagement[0]
+          ? b.post_engagement[0].engagement_score 
+          : 0;
+        return scoreB - scoreA;
+      });
+    }
+
     // Check if there are more results
-    const hasMore = (posts || []).length > limit;
-    const items = (posts || []).slice(0, limit);
+    const hasMore = sortedPosts.length > limit;
+    const items = sortedPosts.slice(0, limit);
 
     // For each post, check if user has liked or bookmarked
     const postsWithInteractions = await Promise.all(

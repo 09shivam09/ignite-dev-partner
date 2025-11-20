@@ -4,6 +4,7 @@ import { Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEngagementTracking } from "@/hooks/useEngagement";
 
 interface LikeButtonProps {
   postId: string;
@@ -16,6 +17,7 @@ export const LikeButton = ({ postId, initialLikes, initialLiked = false, onUpdat
   const [isLiked, setIsLiked] = useState(initialLiked);
   const [likesCount, setLikesCount] = useState(initialLikes);
   const [isLoading, setIsLoading] = useState(false);
+  const { trackEngagement } = useEngagementTracking(postId);
 
   useEffect(() => {
     checkIfLiked();
@@ -102,7 +104,10 @@ export const LikeButton = ({ postId, initialLikes, initialLiked = false, onUpdat
         if (error) throw error;
       }
 
-      onUpdate();
+      // Track engagement for scoring
+      trackEngagement('like');
+      
+      onUpdate?.();
     } catch (error: any) {
       // Revert on error
       setIsLiked(!isLiked);

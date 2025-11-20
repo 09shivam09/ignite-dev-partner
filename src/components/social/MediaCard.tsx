@@ -11,6 +11,7 @@ import { MediaPlayer } from '@/components/media/MediaPlayer';
 import { useState } from 'react';
 import type { FeedPost } from '@/hooks/useFeed';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MediaCardProps {
   post: FeedPost;
@@ -24,6 +25,15 @@ export function MediaCard({ post, index = 0, onUpdate }: MediaCardProps) {
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/posts/${post.id}`;
+    
+    // Track share in backend
+    try {
+      await supabase.functions.invoke('share-post', {
+        body: { post_id: post.id },
+      });
+    } catch (error) {
+      console.error('Error tracking share:', error);
+    }
     
     if (navigator.share) {
       try {
