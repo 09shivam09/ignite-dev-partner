@@ -114,6 +114,7 @@ export const MediaPlayer = ({
           <img
             src={mediaUrl}
             alt="Post media"
+            loading="lazy"
             className="w-full h-full object-cover"
             onLoad={trackView}
           />
@@ -132,6 +133,7 @@ export const MediaPlayer = ({
         muted={isMuted}
         loop={mediaType === 'reel'}
         playsInline
+        preload="metadata"
         className="w-full h-full object-contain"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
