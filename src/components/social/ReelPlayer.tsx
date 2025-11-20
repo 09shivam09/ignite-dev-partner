@@ -1,12 +1,19 @@
 import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2, VolumeX, Maximize, Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, MoreVertical, Flag, MessageCircle, Share2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { LikeButton } from './LikeButton';
 import { BookmarkButton } from './BookmarkButton';
 import { FollowButton } from './FollowButton';
+import { ReportModal } from './ReportModal';
 import type { FeedPost } from '@/hooks/useFeed';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -32,6 +39,7 @@ export function ReelPlayer({
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [watchStartTime, setWatchStartTime] = useState<number | null>(null);
   const [isFollowing, setIsFollowing] = useState(post.user.is_following);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // Intersection observer for autoplay
   const { ref: containerRef, isIntersecting } = useIntersectionObserver({
@@ -183,17 +191,33 @@ export function ReelPlayer({
                 userId={post.user.id}
                 isFollowing={isFollowing}
                 onFollowChange={setIsFollowing}
-                size="sm"
-              />
-            )}
-          </div>
+              size="sm"
+            />
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white bg-white/20 backdrop-blur-sm hover:bg-white/30">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => setShowReportModal(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Flag className="h-4 w-4 mr-2" />
+                Report reel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
-          {post.title && (
-            <h3 className="text-lg font-bold text-white">{post.title}</h3>
-          )}
-          {post.content && (
-            <p className="text-sm text-white/90 line-clamp-3">{post.content}</p>
-          )}
+        {post.title && (
+          <h3 className="text-lg font-bold text-white">{post.title}</h3>
+        )}
+        {post.content && (
+          <p className="text-sm text-white/90 line-clamp-3">{post.content}</p>
+        )}
         </div>
 
         {/* Right Side - Action Buttons */}
@@ -279,10 +303,17 @@ export function ReelPlayer({
       {post.view_count > 0 && (
         <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
           <p className="text-xs text-white">
-            {post.view_count.toLocaleString()} views
-          </p>
-        </div>
-      )}
-    </div>
+          {post.view_count.toLocaleString()} views
+        </p>
+      </div>
+    )}
+
+    {/* Report Modal */}
+    <ReportModal
+      postId={post.id}
+      open={showReportModal}
+      onOpenChange={setShowReportModal}
+    />
+  </div>
   );
 }
