@@ -151,7 +151,7 @@ export default function Feed() {
             onAction={() => setIsCreateModalOpen(true)}
           />
         ) : viewMode === 'grid' ? (
-          <MediaGrid posts={posts} onUpdate={refetch} />
+          <MediaGrid />
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
