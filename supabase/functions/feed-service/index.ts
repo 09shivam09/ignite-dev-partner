@@ -55,11 +55,7 @@ Deno.serve(async (req) => {
         comment_count,
         view_count,
         created_at,
-        user:profiles!posts_user_id_fkey (
-          user_id,
-          full_name,
-          avatar_url
-        ),
+        user_id,
         post_engagement (
           engagement_score
         )
@@ -144,6 +140,13 @@ Deno.serve(async (req) => {
     // For each post, check if user has liked or bookmarked
     const postsWithInteractions = await Promise.all(
       items.map(async (post) => {
+        // Get profile data for the post user
+        const { data: profileData } = await supabaseClient
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .eq('user_id', post.user_id)
+          .maybeSingle();
+
         // Check if liked
         const { data: likeData } = await supabaseClient
           .from('likes')
@@ -161,12 +164,11 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         // Check if following user
-        const profileData = Array.isArray(post.user) ? post.user[0] : post.user;
         const { data: followData } = await supabaseClient
           .from('follows')
           .select('id')
           .eq('follower_id', user.id)
-          .eq('following_id', profileData?.user_id)
+          .eq('following_id', post.user_id)
           .maybeSingle();
 
         // Get media renditions if available
