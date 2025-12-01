@@ -62,6 +62,79 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_requests: {
+        Row: {
+          budget_range: string | null
+          consumer_id: string
+          created_at: string | null
+          event_date: string
+          event_type: string | null
+          guest_count: number | null
+          id: string
+          message: string | null
+          responded_at: string | null
+          service_id: string | null
+          status: string | null
+          updated_at: string | null
+          vendor_id: string
+          vendor_response: string | null
+        }
+        Insert: {
+          budget_range?: string | null
+          consumer_id: string
+          created_at?: string | null
+          event_date: string
+          event_type?: string | null
+          guest_count?: number | null
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          service_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vendor_id: string
+          vendor_response?: string | null
+        }
+        Update: {
+          budget_range?: string | null
+          consumer_id?: string
+          created_at?: string | null
+          event_date?: string
+          event_type?: string | null
+          guest_count?: number | null
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          service_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vendor_id?: string
+          vendor_response?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_requests_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "booking_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           base_price: number
@@ -961,54 +1034,133 @@ export type Database = {
           },
         ]
       }
+      profile_views: {
+        Row: {
+          id: string
+          profile_id: string | null
+          referrer_source: string | null
+          session_id: string | null
+          vendor_id: string | null
+          viewed_at: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          id?: string
+          profile_id?: string | null
+          referrer_source?: string | null
+          session_id?: string | null
+          vendor_id?: string | null
+          viewed_at?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          id?: string
+          profile_id?: string | null
+          referrer_source?: string | null
+          session_id?: string | null
+          vendor_id?: string | null
+          viewed_at?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_views_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "profile_views_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
+          bio_tags: string[] | null
           city: string | null
+          cover_image_url: string | null
           created_at: string | null
           email: string | null
           follower_count: number | null
           following_count: number | null
           full_name: string | null
           id: string
+          is_verified: boolean | null
+          last_active_at: string | null
           phone: string | null
           preferences: Json | null
+          profile_completion_score: number | null
+          profile_views: number | null
+          social_links: Json | null
           updated_at: string | null
           user_id: string
           user_type: string | null
+          username: string | null
+          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          bio_tags?: string[] | null
           city?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           email?: string | null
           follower_count?: number | null
           following_count?: number | null
           full_name?: string | null
           id?: string
+          is_verified?: boolean | null
+          last_active_at?: string | null
           phone?: string | null
           preferences?: Json | null
+          profile_completion_score?: number | null
+          profile_views?: number | null
+          social_links?: Json | null
           updated_at?: string | null
           user_id: string
           user_type?: string | null
+          username?: string | null
+          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          bio_tags?: string[] | null
           city?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           email?: string | null
           follower_count?: number | null
           following_count?: number | null
           full_name?: string | null
           id?: string
+          is_verified?: boolean | null
+          last_active_at?: string | null
           phone?: string | null
           preferences?: Json | null
+          profile_completion_score?: number | null
+          profile_views?: number | null
+          social_links?: Json | null
           updated_at?: string | null
           user_id?: string
           user_type?: string | null
+          username?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -1226,6 +1378,48 @@ export type Database = {
           },
         ]
       }
+      saved_vendors: {
+        Row: {
+          collection_name: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          collection_name?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          collection_name?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_vendors_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "saved_vendors_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spatial_ref_sys: {
         Row: {
           auth_name: string | null
@@ -1271,30 +1465,107 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_analytics: {
+        Row: {
+          booking_requests: number | null
+          created_at: string | null
+          date: string
+          id: string
+          messages_received: number | null
+          portfolio_clicks: number | null
+          profile_views: number | null
+          saves: number | null
+          shares: number | null
+          vendor_id: string
+        }
+        Insert: {
+          booking_requests?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          messages_received?: number | null
+          portfolio_clicks?: number | null
+          profile_views?: number | null
+          saves?: number | null
+          shares?: number | null
+          vendor_id: string
+        }
+        Update: {
+          booking_requests?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          messages_received?: number | null
+          portfolio_clicks?: number | null
+          profile_views?: number | null
+          saves?: number | null
+          shares?: number | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_analytics_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_portfolio: {
         Row: {
           caption: string | null
           created_at: string | null
+          description: string | null
           display_order: number | null
+          event_date: string | null
+          event_type: string | null
           id: string
           image_url: string
+          likes_count: number | null
+          medium_url: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string | null
           vendor_id: string
+          video_url: string | null
+          views_count: number | null
         }
         Insert: {
           caption?: string | null
           created_at?: string | null
+          description?: string | null
           display_order?: number | null
+          event_date?: string | null
+          event_type?: string | null
           id?: string
           image_url: string
+          likes_count?: number | null
+          medium_url?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string | null
           vendor_id: string
+          video_url?: string | null
+          views_count?: number | null
         }
         Update: {
           caption?: string | null
           created_at?: string | null
+          description?: string | null
           display_order?: number | null
+          event_date?: string | null
+          event_type?: string | null
           id?: string
           image_url?: string
+          likes_count?: number | null
+          medium_url?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string | null
           vendor_id?: string
+          video_url?: string | null
+          views_count?: number | null
         }
         Relationships: [
           {
@@ -1374,6 +1645,8 @@ export type Database = {
       }
       vendors: {
         Row: {
+          availability_status: string | null
+          booking_count_30d: number | null
           business_address: string | null
           business_description: string | null
           business_email: string | null
@@ -1385,17 +1658,31 @@ export type Database = {
           is_active: boolean | null
           location: unknown
           logo_url: string | null
+          portfolio_count: number | null
+          price_range: string | null
           rating: number | null
+          response_time_hours: number | null
+          save_count: number | null
+          search_vector: unknown
           service_radius: number | null
+          service_tags: string[] | null
+          tagline: string | null
+          team_size: number | null
           total_bookings: number | null
           total_reviews: number | null
           updated_at: string | null
           user_id: string
+          username: string | null
           verification_status:
             | Database["public"]["Enums"]["vendor_verification_status"]
             | null
+          video_intro_url: string | null
+          view_count: number | null
+          years_experience: number | null
         }
         Insert: {
+          availability_status?: string | null
+          booking_count_30d?: number | null
           business_address?: string | null
           business_description?: string | null
           business_email?: string | null
@@ -1407,17 +1694,31 @@ export type Database = {
           is_active?: boolean | null
           location?: unknown
           logo_url?: string | null
+          portfolio_count?: number | null
+          price_range?: string | null
           rating?: number | null
+          response_time_hours?: number | null
+          save_count?: number | null
+          search_vector?: unknown
           service_radius?: number | null
+          service_tags?: string[] | null
+          tagline?: string | null
+          team_size?: number | null
           total_bookings?: number | null
           total_reviews?: number | null
           updated_at?: string | null
           user_id: string
+          username?: string | null
           verification_status?:
             | Database["public"]["Enums"]["vendor_verification_status"]
             | null
+          video_intro_url?: string | null
+          view_count?: number | null
+          years_experience?: number | null
         }
         Update: {
+          availability_status?: string | null
+          booking_count_30d?: number | null
           business_address?: string | null
           business_description?: string | null
           business_email?: string | null
@@ -1429,15 +1730,27 @@ export type Database = {
           is_active?: boolean | null
           location?: unknown
           logo_url?: string | null
+          portfolio_count?: number | null
+          price_range?: string | null
           rating?: number | null
+          response_time_hours?: number | null
+          save_count?: number | null
+          search_vector?: unknown
           service_radius?: number | null
+          service_tags?: string[] | null
+          tagline?: string | null
+          team_size?: number | null
           total_bookings?: number | null
           total_reviews?: number | null
           updated_at?: string | null
           user_id?: string
+          username?: string | null
           verification_status?:
             | Database["public"]["Enums"]["vendor_verification_status"]
             | null
+          video_intro_url?: string | null
+          view_count?: number | null
+          years_experience?: number | null
         }
         Relationships: []
       }
