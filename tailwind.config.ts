@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -22,6 +26,8 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          glow: "hsl(var(--primary-glow))",
+          light: "hsl(var(--primary-light))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -38,14 +44,28 @@ export default {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          glow: "hsl(var(--accent-glow))",
+          light: "hsl(var(--accent-light))",
+        },
+        love: {
+          DEFAULT: "hsl(var(--love))",
+          foreground: "hsl(var(--love-foreground))",
+          light: "hsl(var(--love-light))",
+        },
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          foreground: "hsl(var(--gold-foreground))",
+          light: "hsl(var(--gold-light))",
         },
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
+          light: "hsl(var(--success-light))",
         },
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+          light: "hsl(var(--warning-light))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
