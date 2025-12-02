@@ -20,9 +20,9 @@ import { AccessibilitySettings } from "@/components/AccessibilitySettings";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import heroImage from "@/assets/hero-event-premium.jpg";
-import vendorPhotographer from "@/assets/vendor-photographer.jpg";
-import vendorCatering from "@/assets/vendor-catering.jpg";
-import vendorVenue from "@/assets/vendor-venue.jpg";
+import vendorPhotographer from "@/assets/vendor-photographer-hd.jpg";
+import vendorCatering from "@/assets/vendor-catering-hd.jpg";
+import vendorVenue from "@/assets/vendor-venue-hd.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -363,7 +363,7 @@ const Index = () => {
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </div>
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             {
               name: "Elite Photography",
@@ -399,29 +399,28 @@ const Index = () => {
               className="card-interactive rounded-2xl overflow-hidden cursor-pointer group"
               onClick={() => navigate(`/vendor/${i + 1}`)}
             >
-              <div className="relative h-52 overflow-hidden">
+              <div className="relative aspect-square overflow-hidden">
                 <img
                   src={vendor.image}
                   alt={vendor.name}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 
                 {/* Badge */}
-                <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-sm text-xs font-semibold shadow-lg">
+                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-sm text-xs font-semibold shadow-lg">
                   {vendor.badge}
                 </div>
                 
                 {/* Rating pill */}
-                <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm text-white text-sm font-medium">
-                  <Star className="h-4 w-4 fill-gold text-gold" />
+                <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm text-white text-xs font-medium">
+                  <Star className="h-3 w-3 fill-gold text-gold" />
                   <span>{vendor.rating}</span>
-                  <span className="text-white/70">({vendor.reviews})</span>
                 </div>
 
                 {/* Favorite button */}
                 <motion.button 
-                  className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
+                  className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={(e) => {
@@ -429,29 +428,20 @@ const Index = () => {
                     toast({ title: "Added to favorites! 💖" });
                   }}
                 >
-                  <Heart className="h-5 w-5 text-love hover:fill-love transition-colors" />
+                  <Heart className="h-4 w-4 text-love hover:fill-love transition-colors" />
                 </motion.button>
-              </div>
-              
-              <div className="p-5 bg-card">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-bold text-lg group-hover:text-primary transition-colors">{vendor.name}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-                      {vendor.category}
-                    </p>
+
+                {/* Bottom info overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h3 className="font-bold text-white text-base mb-1 group-hover:text-primary-glow transition-colors">{vendor.name}</h3>
+                  <p className="text-xs text-white/80 flex items-center gap-1 mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                    {vendor.category}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-white">{vendor.price}</p>
+                    <span className="text-xs text-white/60">({vendor.reviews} reviews)</span>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-muted-foreground">Starting from</span>
-                    <p className="text-lg font-bold text-gradient-primary">{vendor.price}</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="rounded-xl border-primary/30 hover:bg-primary hover:text-primary-foreground group/btn">
-                    View Details
-                    <ArrowRight className="ml-1 h-4 w-4 group-hover/btn:translate-x-0.5 transition-transform" />
-                  </Button>
                 </div>
               </div>
             </motion.div>
