@@ -2,6 +2,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import themeRustic from "@/assets/theme-rustic.jpg";
+import themeModern from "@/assets/theme-modern.jpg";
+import themeVintage from "@/assets/theme-vintage.jpg";
+import themeTropical from "@/assets/theme-tropical.jpg";
 
 interface Theme {
   id: string;
@@ -17,28 +21,28 @@ const themes: Theme[] = [
     name: "Rustic Elegance",
     description: "Natural wood & earthy tones",
     popularity: "+45%",
-    image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&q=80"
+    image: themeRustic
   },
   {
     id: "modern",
     name: "Modern Minimalist",
     description: "Clean lines & neutral palette",
     popularity: "+38%",
-    image: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=400&q=80"
+    image: themeModern
   },
   {
     id: "vintage",
     name: "Vintage Romance",
     description: "Classic charm & timeless beauty",
     popularity: "+32%",
-    image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400&q=80"
+    image: themeVintage
   },
   {
     id: "tropical",
     name: "Tropical Paradise",
     description: "Vibrant colors & exotic florals",
     popularity: "+29%",
-    image: "https://images.unsplash.com/photo-1530023367847-a683933f4172?w=400&q=80"
+    image: themeTropical
   },
 ];
 
