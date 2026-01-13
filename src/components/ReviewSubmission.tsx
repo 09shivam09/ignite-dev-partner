@@ -54,13 +54,13 @@ export const ReviewSubmission = ({ bookingId, vendorId, trigger }: ReviewSubmiss
       for (const image of images) {
         const fileName = `${user.id}/${Date.now()}_${image.name}`;
         const { data, error } = await supabase.storage
-          .from("reviews")
+          .from("review-images")
           .upload(fileName, image);
 
         if (error) throw error;
         
         const { data: { publicUrl } } = supabase.storage
-          .from("reviews")
+          .from("review-images")
           .getPublicUrl(fileName);
         
         imageUrls.push(publicUrl);
