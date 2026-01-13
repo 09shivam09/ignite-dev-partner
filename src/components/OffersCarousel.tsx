@@ -2,6 +2,12 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tag, Clock } from "lucide-react";
+import offerCatering from "@/assets/offer-catering.jpg";
+import offerPhotography from "@/assets/offer-photography.jpg";
+import offerVenue from "@/assets/offer-venue.jpg";
+import offerDecoration from "@/assets/offer-decoration.jpg";
+import offerEntertainment from "@/assets/offer-entertainment.jpg";
+import offerCake from "@/assets/offer-cake.jpg";
 
 interface Offer {
   id: string;
@@ -20,7 +26,7 @@ const offers: Offer[] = [
     description: "Get 25% off on premium catering packages",
     discount: "25% OFF",
     validUntil: "Dec 31, 2024",
-    image: "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&q=80",
+    image: offerCatering,
     category: "Catering"
   },
   {
@@ -29,7 +35,7 @@ const offers: Offer[] = [
     description: "Book 2 events, get 1 free pre-wedding shoot",
     discount: "BOGO",
     validUntil: "Jan 15, 2025",
-    image: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800&q=80",
+    image: offerPhotography,
     category: "Photography"
   },
   {
@@ -38,7 +44,7 @@ const offers: Offer[] = [
     description: "Flat ₹10,000 off on premium venues",
     discount: "₹10K OFF",
     validUntil: "Dec 25, 2024",
-    image: "https://images.unsplash.com/photo-1519167758481-83f29da8a1c0?w=800&q=80",
+    image: offerVenue,
     category: "Venues"
   },
   {
@@ -47,8 +53,26 @@ const offers: Offer[] = [
     description: "30% off on themed decoration packages",
     discount: "30% OFF",
     validUntil: "Jan 10, 2025",
-    image: "https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=800&q=80",
+    image: offerDecoration,
     category: "Decoration"
+  },
+  {
+    id: "5",
+    title: "Live Entertainment Deal",
+    description: "Book live band + DJ combo at special rates",
+    discount: "40% OFF",
+    validUntil: "Jan 20, 2025",
+    image: offerEntertainment,
+    category: "Entertainment"
+  },
+  {
+    id: "6",
+    title: "Designer Cake Package",
+    description: "Premium wedding cake with free tasting session",
+    discount: "FREE TASTING",
+    validUntil: "Feb 14, 2025",
+    image: offerCake,
+    category: "Cake & Desserts"
   },
 ];
 
