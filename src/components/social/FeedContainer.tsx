@@ -53,19 +53,32 @@ export function FeedContainer({ type = 'following', eventId, onCreatePost }: Fee
   }
 
   if (uniquePosts.length === 0) {
+    const emptyStateConfig = {
+      following: {
+        title: 'No posts from people you follow',
+        description: 'Follow users to see their posts here',
+      },
+      my_posts: {
+        title: "You haven't posted anything yet",
+        description: 'Share your first photo, video, or reel!',
+      },
+      discover: {
+        title: 'No posts to discover',
+        description: 'Be the first to share something!',
+      },
+      events: {
+        title: 'No event posts yet',
+        description: 'Be the first to share something!',
+      },
+    };
+
+    const config = emptyStateConfig[type] || emptyStateConfig.discover;
+
     return (
       <EmptyState
         icon={Plus}
-        title={
-          type === 'following' 
-            ? 'No posts from people you follow' 
-            : 'No posts yet'
-        }
-        description={
-          type === 'following'
-            ? 'Follow users to see their posts here'
-            : 'Be the first to share something!'
-        }
+        title={config.title}
+        description={config.description}
         actionLabel="Create Post"
         onAction={onCreatePost}
       />

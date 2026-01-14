@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 interface FeedRequest {
-  type?: 'following' | 'discover' | 'events';
+  type?: 'following' | 'discover' | 'events' | 'my_posts';
   cursor?: string;
   limit?: number;
   event_id?: string;
@@ -64,7 +64,11 @@ Deno.serve(async (req) => {
       .limit(limit + 1); // Fetch one extra to determine has_more
 
     // Apply feed type filters
-    if (type === 'following') {
+    if (type === 'my_posts') {
+      // Show only the current user's posts
+      query = query.eq('user_id', user.id);
+      query = query.order('created_at', { ascending: false });
+    } else if (type === 'following') {
       // Get user's follows
       const { data: follows } = await supabaseClient
         .from('follows')
