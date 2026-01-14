@@ -74,7 +74,8 @@ export async function fetchFeed(
   } else if (type === 'events' && eventId) {
     query = query.eq('event_id', eventId);
   } else if (type === 'discover') {
-    query = query.not('media_type', 'is', null);
+    // Show posts from OTHER users only (not current user)
+    query = query.neq('user_id', user.id).not('media_type', 'is', null);
   }
 
   // Apply cursor pagination
