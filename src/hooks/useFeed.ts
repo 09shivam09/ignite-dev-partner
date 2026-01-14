@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export type FeedType = 'following' | 'discover' | 'events';
+export type FeedType = 'following' | 'discover' | 'events' | 'my_posts';
 
 export interface FeedPost {
   id: string;

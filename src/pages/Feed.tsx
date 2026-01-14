@@ -85,9 +85,10 @@ export default function Feed() {
 
           {/* Feed Type Tabs */}
           <Tabs value={feedType} onValueChange={(v) => setFeedType(v as FeedType)}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="following">Following</TabsTrigger>
               <TabsTrigger value="discover">Discover</TabsTrigger>
+              <TabsTrigger value="my_posts">My Posts</TabsTrigger>
               <TabsTrigger value="events">Events</TabsTrigger>
             </TabsList>
             
@@ -101,6 +102,13 @@ export default function Feed() {
             <TabsContent value="discover" className="mt-6">
               <FeedContainer 
                 type="discover" 
+                onCreatePost={() => setIsCreateModalOpen(true)}
+              />
+            </TabsContent>
+            
+            <TabsContent value="my_posts" className="mt-6">
+              <FeedContainer 
+                type="my_posts" 
                 onCreatePost={() => setIsCreateModalOpen(true)}
               />
             </TabsContent>
