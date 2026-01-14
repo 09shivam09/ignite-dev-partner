@@ -74,10 +74,8 @@ export default function Feed() {
             </div>
           </div>
 
-          {/* Dev Tools - Only show in development */}
-          {import.meta.env.DEV && (
-            <DevTools onSeedComplete={() => refetch()} />
-          )}
+          {/* Dev Tools - For seeding dummy content */}
+          <DevTools onSeedComplete={() => refetch()} />
 
           {/* Create Post Section */}
           {isCreateOpen && (

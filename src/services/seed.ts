@@ -79,74 +79,83 @@ export async function seedDummyContent(): Promise<{ success: boolean; message: s
   const counts = { photos: 0, videos: 0, reels: 0 };
 
   try {
-    // Seed photo posts
-    const photoPosts = PLACEHOLDER_IMAGES.map((url, index) => ({
-      user_id: user.id,
-      content: CAPTIONS_PHOTO[index % CAPTIONS_PHOTO.length],
-      title: `Photo Post ${index + 1}`,
-      media_type: 'photo' as const,
-      media_urls: [url],
-      thumbnail_url: url,
-      moderation_status: 'approved',
-      processing_status: 'ready',
-      like_count: Math.floor(Math.random() * 500),
-      comment_count: Math.floor(Math.random() * 50),
-      view_count: Math.floor(Math.random() * 2000),
-    }));
+    // Seed photo posts (one at a time to avoid batch issues)
+    for (let index = 0; index < PLACEHOLDER_IMAGES.length; index++) {
+      const url = PLACEHOLDER_IMAGES[index];
+      const { error: photoError } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          content: CAPTIONS_PHOTO[index % CAPTIONS_PHOTO.length],
+          title: `Photo Post ${index + 1}`,
+          media_type: 'photo',
+          media_urls: [url],
+          thumbnail_url: url,
+          moderation_status: 'approved',
+          processing_status: 'ready',
+          like_count: Math.floor(Math.random() * 500),
+          comment_count: Math.floor(Math.random() * 50),
+          view_count: Math.floor(Math.random() * 2000),
+        });
 
-    const { data: insertedPhotos, error: photoError } = await supabase
-      .from('posts')
-      .insert(photoPosts)
-      .select();
-
-    if (photoError) throw photoError;
-    counts.photos = insertedPhotos?.length || 0;
+      if (photoError) {
+        console.error('Photo insert error:', photoError);
+      } else {
+        counts.photos++;
+      }
+    }
 
     // Seed video posts
-    const videoPosts = PLACEHOLDER_VIDEOS.map((url, index) => ({
-      user_id: user.id,
-      content: CAPTIONS_VIDEO[index % CAPTIONS_VIDEO.length],
-      title: `Video Post ${index + 1}`,
-      media_type: 'video' as const,
-      media_urls: [url],
-      thumbnail_url: PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length],
-      moderation_status: 'approved',
-      processing_status: 'ready',
-      like_count: Math.floor(Math.random() * 1000),
-      comment_count: Math.floor(Math.random() * 100),
-      view_count: Math.floor(Math.random() * 5000),
-    }));
+    for (let index = 0; index < PLACEHOLDER_VIDEOS.length; index++) {
+      const url = PLACEHOLDER_VIDEOS[index];
+      const { error: videoError } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          content: CAPTIONS_VIDEO[index % CAPTIONS_VIDEO.length],
+          title: `Video Post ${index + 1}`,
+          media_type: 'video',
+          media_urls: [url],
+          thumbnail_url: PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length],
+          moderation_status: 'approved',
+          processing_status: 'ready',
+          like_count: Math.floor(Math.random() * 1000),
+          comment_count: Math.floor(Math.random() * 100),
+          view_count: Math.floor(Math.random() * 5000),
+        });
 
-    const { data: insertedVideos, error: videoError } = await supabase
-      .from('posts')
-      .insert(videoPosts)
-      .select();
-
-    if (videoError) throw videoError;
-    counts.videos = insertedVideos?.length || 0;
+      if (videoError) {
+        console.error('Video insert error:', videoError);
+      } else {
+        counts.videos++;
+      }
+    }
 
     // Seed reel posts
-    const reelPosts = PLACEHOLDER_VIDEOS.map((url, index) => ({
-      user_id: user.id,
-      content: CAPTIONS_REEL[index % CAPTIONS_REEL.length],
-      title: `Reel ${index + 1}`,
-      media_type: 'reel' as const,
-      media_urls: [url],
-      thumbnail_url: PLACEHOLDER_IMAGES[(index + 5) % PLACEHOLDER_IMAGES.length],
-      moderation_status: 'approved',
-      processing_status: 'ready',
-      like_count: Math.floor(Math.random() * 2000),
-      comment_count: Math.floor(Math.random() * 200),
-      view_count: Math.floor(Math.random() * 10000),
-    }));
+    for (let index = 0; index < PLACEHOLDER_VIDEOS.length; index++) {
+      const url = PLACEHOLDER_VIDEOS[index];
+      const { error: reelError } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          content: CAPTIONS_REEL[index % CAPTIONS_REEL.length],
+          title: `Reel ${index + 1}`,
+          media_type: 'reel',
+          media_urls: [url],
+          thumbnail_url: PLACEHOLDER_IMAGES[(index + 5) % PLACEHOLDER_IMAGES.length],
+          moderation_status: 'approved',
+          processing_status: 'ready',
+          like_count: Math.floor(Math.random() * 2000),
+          comment_count: Math.floor(Math.random() * 200),
+          view_count: Math.floor(Math.random() * 10000),
+        });
 
-    const { data: insertedReels, error: reelError } = await supabase
-      .from('posts')
-      .insert(reelPosts)
-      .select();
-
-    if (reelError) throw reelError;
-    counts.reels = insertedReels?.length || 0;
+      if (reelError) {
+        console.error('Reel insert error:', reelError);
+      } else {
+        counts.reels++;
+      }
+    }
 
     return {
       success: true,
