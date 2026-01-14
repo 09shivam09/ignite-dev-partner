@@ -4,7 +4,8 @@ import { PostCard } from './PostCard';
 import { ReelCard } from './ReelCard';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useFeedQuery, FeedType, FeedPost } from '@/hooks/useFeedQuery';
+import { useFeedQuery } from '@/hooks/useFeedQuery';
+import type { FeedType } from '@/services/feed';
 
 interface FeedListProps {
   type?: FeedType;
@@ -87,7 +88,7 @@ export function FeedList({ type = 'all', eventId, onCreatePost }: FeedListProps)
         }
       }}
       overscan={200}
-      itemContent={(index, post) => (
+      itemContent={(_index, post) => (
         <div className="mb-6">
           {post.media_type === 'reel' ? (
             <ReelCard post={post} onUpdate={refetch} />

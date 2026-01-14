@@ -16,7 +16,7 @@ import { CommentSection } from './CommentSection';
 import { ReportModal } from './ReportModal';
 import { MediaPlayer } from '@/components/media/MediaPlayer';
 import { useState } from 'react';
-import type { FeedPost } from '@/hooks/useFeed';
+import type { FeedPost } from '@/services/feed';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 

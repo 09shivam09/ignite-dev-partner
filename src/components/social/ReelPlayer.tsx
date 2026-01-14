@@ -14,7 +14,7 @@ import { LikeButton } from './LikeButton';
 import { BookmarkButton } from './BookmarkButton';
 import { FollowButton } from './FollowButton';
 import { ReportModal } from './ReportModal';
-import type { FeedPost } from '@/hooks/useFeed';
+import type { FeedPost } from '@/services/feed';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -46,14 +46,9 @@ export function ReelPlayer({
     threshold: 0.5,
   });
 
-  // Get the best video URL based on available renditions
+  // Get the video URL
   const getVideoUrl = () => {
-    if (post.renditions.length > 0) {
-      // Try to get 720p, fallback to highest quality available
-      const preferred = post.renditions.find(r => r.quality === '720p');
-      return preferred?.storage_path || post.renditions[0]?.storage_path || post.media_urls[0];
-    }
-    return post.media_urls[0];
+    return post.media_urls[0] || '';
   };
 
   // Autoplay logic
