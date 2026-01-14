@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchFeed, toggleLike, toggleBookmark, FeedType, FeedPost } from '@/services/feed';
+import { fetchFeed, toggleLike, toggleBookmark } from '@/services/feed';
+import type { FeedType, FeedPost } from '@/services/feed';
 
 export function useFeedQuery(type: FeedType = 'all', eventId?: string) {
   return useInfiniteQuery({

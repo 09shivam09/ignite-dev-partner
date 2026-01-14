@@ -1,31 +1,37 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, Play } from "lucide-react";
-import { FeedContainer } from "@/components/social/FeedContainer";
+import { FeedList } from "@/components/feed/FeedList";
+import { CreatePost } from "@/components/feed/CreatePost";
+import { DevTools } from "@/components/feed/DevTools";
 import { TrendingSection } from "@/components/social/TrendingSection";
 import { ReelsFeed } from "@/components/social/ReelsFeed";
-import { CreatePostModal } from "@/components/social/CreatePostModal";
-import { MediaUploader } from "@/components/media/MediaUploader";
 import { NotificationDrawer } from "@/components/social/NotificationDrawer";
 import { AppLayout } from "@/components/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { useFeed, type FeedType } from "@/hooks/useFeed";
+import { useFeedQuery } from "@/hooks/useFeedQuery";
+import type { FeedType } from "@/services/feed";
 
 export default function Feed() {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isMediaUploadOpen, setIsMediaUploadOpen] = useState(false);
-  const [feedType, setFeedType] = useState<FeedType>('following');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [feedType, setFeedType] = useState<FeedType>('discover');
   const [viewMode, setViewMode] = useState<'feed' | 'reels'>('feed');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const { refetch } = useFeed(feedType);
+  const { refetch } = useFeedQuery(feedType);
 
-  const handlePullToRefresh = async () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
     await refetch();
     setIsRefreshing(false);
     toast.success("Feed refreshed!");
+  };
+
+  const handlePostCreated = () => {
+    setIsCreateOpen(false);
+    refetch();
+    toast.success("Post created successfully!");
   };
 
   return (
@@ -33,17 +39,17 @@ export default function Feed() {
       {viewMode === 'reels' ? (
         <ReelsFeed 
           type={feedType}
-          onCreatePost={() => setIsCreateModalOpen(true)}
+          onCreatePost={() => setIsCreateOpen(true)}
         />
       ) : (
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Social Feed</h1>
-              <p className="text-muted-foreground">Connect with the community</p>
+              <h1 className="text-2xl sm:text-3xl font-bold">Feed</h1>
+              <p className="text-muted-foreground text-sm">Share moments with the community</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="icon"
@@ -55,28 +61,31 @@ export default function Feed() {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={handlePullToRefresh}
+                onClick={handleRefresh}
                 disabled={isRefreshing}
               >
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
               </Button>
               <NotificationDrawer />
-              <Button 
-                variant={isMediaUploadOpen ? "secondary" : "default"}
-                onClick={() => setIsMediaUploadOpen(!isMediaUploadOpen)}
-              >
+              <Button onClick={() => setIsCreateOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                {isMediaUploadOpen ? 'Cancel Upload' : 'Upload Media'}
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setIsCreateModalOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Text Post
+                Create Post
               </Button>
             </div>
           </div>
+
+          {/* Dev Tools - Only show in development */}
+          {import.meta.env.DEV && (
+            <DevTools onSeedComplete={() => refetch()} />
+          )}
+
+          {/* Create Post Section */}
+          {isCreateOpen && (
+            <CreatePost 
+              onSuccess={handlePostCreated}
+              onCancel={() => setIsCreateOpen(false)}
+            />
+          )}
 
           {/* Trending Section - Only show on Discover tab */}
           {feedType === 'discover' && (
@@ -86,63 +95,42 @@ export default function Feed() {
           {/* Feed Type Tabs */}
           <Tabs value={feedType} onValueChange={(v) => setFeedType(v as FeedType)}>
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="following">Following</TabsTrigger>
-              <TabsTrigger value="discover">Discover</TabsTrigger>
-              <TabsTrigger value="my_posts">My Posts</TabsTrigger>
-              <TabsTrigger value="events">Events</TabsTrigger>
+              <TabsTrigger value="following" className="text-xs sm:text-sm">Following</TabsTrigger>
+              <TabsTrigger value="discover" className="text-xs sm:text-sm">Discover</TabsTrigger>
+              <TabsTrigger value="my_posts" className="text-xs sm:text-sm">My Posts</TabsTrigger>
+              <TabsTrigger value="events" className="text-xs sm:text-sm">Events</TabsTrigger>
             </TabsList>
             
             <TabsContent value="following" className="mt-6">
-              <FeedContainer 
+              <FeedList 
                 type="following" 
-                onCreatePost={() => setIsCreateModalOpen(true)}
+                onCreatePost={() => setIsCreateOpen(true)}
               />
             </TabsContent>
             
             <TabsContent value="discover" className="mt-6">
-              <FeedContainer 
+              <FeedList 
                 type="discover" 
-                onCreatePost={() => setIsCreateModalOpen(true)}
+                onCreatePost={() => setIsCreateOpen(true)}
               />
             </TabsContent>
             
             <TabsContent value="my_posts" className="mt-6">
-              <FeedContainer 
+              <FeedList 
                 type="my_posts" 
-                onCreatePost={() => setIsCreateModalOpen(true)}
+                onCreatePost={() => setIsCreateOpen(true)}
               />
             </TabsContent>
             
             <TabsContent value="events" className="mt-6">
-              <FeedContainer 
+              <FeedList 
                 type="events" 
-                onCreatePost={() => setIsCreateModalOpen(true)}
+                onCreatePost={() => setIsCreateOpen(true)}
               />
             </TabsContent>
           </Tabs>
-
-        {/* Media Upload Section */}
-        {isMediaUploadOpen && (
-          <div className="mt-6">
-            <MediaUploader
-              onSuccess={() => {
-                refetch();
-                setIsMediaUploadOpen(false);
-                toast.success('Media uploaded successfully!');
-              }}
-            />
-          </div>
-        )}
-
         </div>
       )}
-
-      {/* Create Post Modal */}
-      <CreatePostModal
-        open={isCreateModalOpen}
-        onOpenChange={setIsCreateModalOpen}
-        onSuccess={refetch}
-      />
     </AppLayout>
   );
 }

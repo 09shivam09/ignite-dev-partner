@@ -4,7 +4,8 @@ import { CommentSection } from './CommentSection';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Loader2, Plus } from 'lucide-react';
-import { useFeed, type FeedType } from '@/hooks/useFeed';
+import { useFeedQuery } from '@/hooks/useFeedQuery';
+import type { FeedType } from '@/services/feed';
 import { toast } from 'sonner';
 
 interface ReelsFeedProps {
@@ -26,7 +27,7 @@ export function ReelsFeed({ type = 'discover', eventId, onCreatePost }: ReelsFee
     isFetchingNextPage,
     refetch,
     isLoading,
-  } = useFeed(type, eventId);
+  } = useFeedQuery(type, eventId);
 
   // Flatten pages and filter for reels/videos only
   const reels = data?.pages

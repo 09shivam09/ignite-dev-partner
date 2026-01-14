@@ -9,10 +9,11 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { uploadMedia, validateFile, UploadProgress } from '@/services/storage';
 import { createPost } from '@/services/feed';
-import { cn } from '@/lib/utils';
 
-interface CreatePostProps {
+
+export interface CreatePostProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
   eventId?: string;
 }
 

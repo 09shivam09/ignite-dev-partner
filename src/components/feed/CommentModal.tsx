@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Send, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
-import { addComment, getComments } from '@/services/feed';
+import { addComment } from '@/services/feed';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 

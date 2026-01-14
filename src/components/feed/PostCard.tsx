@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
 import { CommentModal } from './CommentModal';
-import { FeedPost } from '@/hooks/useFeedQuery';
+import type { FeedPost } from '@/services/feed';
 import { toggleLike, toggleBookmark } from '@/services/feed';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';

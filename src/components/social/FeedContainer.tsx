@@ -4,7 +4,8 @@ import { Loader2 } from 'lucide-react';
 import { MediaCard } from './MediaCard';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Plus } from 'lucide-react';
-import { useFeed, type FeedType } from '@/hooks/useFeed';
+import { useFeedQuery } from '@/hooks/useFeedQuery';
+import type { FeedType } from '@/services/feed';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface FeedContainerProps {
@@ -21,7 +22,7 @@ export function FeedContainer({ type = 'following', eventId, onCreatePost }: Fee
     isFetchingNextPage,
     isLoading,
     refetch,
-  } = useFeed(type, eventId);
+  } = useFeedQuery(type, eventId);
 
   // Flatten pages into single array
   const posts = data?.pages.flatMap(page => page?.data || []) || [];
