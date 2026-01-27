@@ -3,60 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { CartProvider } from "./contexts/CartContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { MarketplaceProtectedRoute } from "./components/MarketplaceProtectedRoute";
-import { GoogleMapsProvider } from "./components/GoogleMapsProvider";
-import { AccessibilityProvider } from "./components/AccessibilityProvider";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { WalletProvider } from "./contexts/WalletContext";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Eager load critical routes
-import Index from "./pages/Index";
-import Splash from "./pages/Splash";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import VendorDetails from "./pages/VendorDetails";
-
-// Lazy load other routes for code splitting
-const Landing = lazy(() => import("./pages/Landing"));
-const Documentation = lazy(() => import("./pages/Documentation"));
-const OTPVerification = lazy(() => import("./pages/OTPVerification"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Search = lazy(() => import("./pages/Search"));
-const CategoryListing = lazy(() => import("./pages/CategoryListing"));
-const Booking = lazy(() => import("./pages/Booking"));
-const Cart = lazy(() => import("./pages/Cart"));
-const Payment = lazy(() => import("./pages/Payment"));
-const BookingConfirmation = lazy(() => import("./pages/BookingConfirmation"));
-const MyBookings = lazy(() => import("./pages/MyBookings"));
-const BookingDetails = lazy(() => import("./pages/BookingDetails"));
-const Chat = lazy(() => import("./pages/Chat"));
-const ChatDetail = lazy(() => import("./pages/ChatDetail"));
-const Profile = lazy(() => import("./pages/Profile"));
-const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
-const Favorites = lazy(() => import("./pages/Favorites"));
-const Notifications = lazy(() => import("./pages/Notifications"));
-const Feed = lazy(() => import("./pages/Feed"));
-const MintNFT = lazy(() => import("./pages/MintNFT"));
-const DAODashboard = lazy(() => import("./pages/dao/DAODashboard"));
-const ProposalsList = lazy(() => import("./pages/dao/ProposalsList"));
-const ProposalDetails = lazy(() => import("./pages/dao/ProposalDetails"));
-const CreateProposal = lazy(() => import("./pages/dao/CreateProposal"));
-const DelegateVoting = lazy(() => import("./pages/dao/DelegateVoting"));
-const VendorDashboard = lazy(() => import("./pages/vendor/VendorDashboard"));
-const VendorOrders = lazy(() => import("./pages/vendor/VendorOrders"));
-const VendorServices = lazy(() => import("./pages/vendor/VendorServices"));
-const VendorAnalytics = lazy(() => import("./pages/vendor/VendorAnalytics"));
-const InspirationGallery = lazy(() => import("./pages/InspirationGallery"));
-const VendorCompare = lazy(() => import("./pages/VendorCompare"));
-const AIEventPlanner = lazy(() => import("./pages/AIEventPlanner"));
-const VendorVerification = lazy(() => import("./pages/VendorVerification"));
-const PlannerToolkit = lazy(() => import("./pages/PlannerToolkit"));
-const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Marketplace pages
 const MarketplaceAuth = lazy(() => import("./pages/marketplace/AuthPage"));
@@ -68,6 +19,7 @@ const MarketplaceVendorDashboard = lazy(() => import("./pages/marketplace/Vendor
 const MarketplaceVendorDetail = lazy(() => import("./pages/marketplace/VendorDetailPage"));
 const MarketplaceUserInquiries = lazy(() => import("./pages/marketplace/UserInquiries"));
 const MarketplaceUserEvents = lazy(() => import("./pages/marketplace/UserEvents"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center p-6">
@@ -85,78 +37,32 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark">
-        <AccessibilityProvider>
-          <WalletProvider>
-            <GoogleMapsProvider>
-              <CartProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <Suspense fallback={<LoadingFallback />}>
-                      <Routes>
-                        <Route path="/landing" element={<Landing />} />
-                        <Route path="/docs" element={<Documentation />} />
-                        <Route path="/splash" element={<Splash />} />
-                        <Route path="/onboarding" element={<Onboarding />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/auth/login" element={<Login />} />
-                        <Route path="/auth/signup" element={<Signup />} />
-                        <Route path="/auth/otp-verification" element={<OTPVerification />} />
-                        <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
-                        <Route path="/category/:categoryId" element={<ProtectedRoute><CategoryListing /></ProtectedRoute>} />
-                        <Route path="/vendor/:vendorId" element={<ProtectedRoute><VendorDetails /></ProtectedRoute>} />
-                        <Route path="/booking/:vendorId" element={<ProtectedRoute><Booking /></ProtectedRoute>} />
-                        <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-                        <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
-                        <Route path="/booking-confirmation" element={<ProtectedRoute><BookingConfirmation /></ProtectedRoute>} />
-                        <Route path="/bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
-                        <Route path="/booking-details/:bookingId" element={<ProtectedRoute><BookingDetails /></ProtectedRoute>} />
-                        <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-                        <Route path="/chat/:vendorId" element={<ProtectedRoute><ChatDetail /></ProtectedRoute>} />
-                        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                        <Route path="/profile/edit" element={<ProtectedRoute><ProfileEdit /></ProtectedRoute>} />
-                        <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-                        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-                        <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-                        <Route path="/mint-nft" element={<ProtectedRoute><MintNFT /></ProtectedRoute>} />
-                        <Route path="/dao" element={<ProtectedRoute><DAODashboard /></ProtectedRoute>} />
-                        <Route path="/dao/proposals" element={<ProtectedRoute><ProposalsList /></ProtectedRoute>} />
-                        <Route path="/dao/proposals/create" element={<ProtectedRoute><CreateProposal /></ProtectedRoute>} />
-                        <Route path="/dao/proposals/:id" element={<ProtectedRoute><ProposalDetails /></ProtectedRoute>} />
-                        <Route path="/dao/delegate" element={<ProtectedRoute><DelegateVoting /></ProtectedRoute>} />
-                        <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
-                        <Route path="/vendor/orders" element={<ProtectedRoute><VendorOrders /></ProtectedRoute>} />
-                        <Route path="/vendor/services" element={<ProtectedRoute><VendorServices /></ProtectedRoute>} />
-                        <Route path="/vendor/analytics" element={<ProtectedRoute><VendorAnalytics /></ProtectedRoute>} />
-                        <Route path="/vendor/verification" element={<ProtectedRoute><VendorVerification /></ProtectedRoute>} />
-                        <Route path="/inspiration" element={<ProtectedRoute><InspirationGallery /></ProtectedRoute>} />
-                        <Route path="/compare" element={<ProtectedRoute><VendorCompare /></ProtectedRoute>} />
-                        <Route path="/ai-planner" element={<ProtectedRoute><AIEventPlanner /></ProtectedRoute>} />
-                        <Route path="/toolkit" element={<ProtectedRoute><PlannerToolkit /></ProtectedRoute>} />
-                        
-                        {/* Event Marketplace Routes */}
-                        <Route path="/marketplace/auth" element={<MarketplaceAuth />} />
-                        <Route path="/marketplace" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceUserHome /></MarketplaceProtectedRoute>} />
-                        <Route path="/marketplace/events/create" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceCreateEvent /></MarketplaceProtectedRoute>} />
-                        <Route path="/marketplace/events/:eventId/vendors" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceVendorDiscovery /></MarketplaceProtectedRoute>} />
-                        <Route path="/marketplace/inquiries" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceUserInquiries /></MarketplaceProtectedRoute>} />
-                        <Route path="/marketplace/events" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceUserEvents /></MarketplaceProtectedRoute>} />
-                        <Route path="/marketplace/vendor/onboarding" element={<MarketplaceProtectedRoute allowedRoles={['vendor']}><MarketplaceVendorOnboarding /></MarketplaceProtectedRoute>} />
-                        <Route path="/marketplace/vendor/dashboard" element={<MarketplaceProtectedRoute allowedRoles={['vendor']}><MarketplaceVendorDashboard /></MarketplaceProtectedRoute>} />
-                        <Route path="/marketplace/vendor/:vendorId" element={<MarketplaceProtectedRoute><MarketplaceVendorDetail /></MarketplaceProtectedRoute>} />
-                        
-                        <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </Suspense>
-                  </BrowserRouter>
-                </TooltipProvider>
-              </CartProvider>
-            </GoogleMapsProvider>
-          </WalletProvider>
-        </AccessibilityProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                {/* Redirect root to marketplace auth */}
+                <Route path="/" element={<Navigate to="/marketplace/auth" replace />} />
+                
+                {/* Event Marketplace Routes */}
+                <Route path="/marketplace/auth" element={<MarketplaceAuth />} />
+                <Route path="/marketplace" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserHome /></MarketplaceProtectedRoute>} />
+                <Route path="/marketplace/events/create" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceCreateEvent /></MarketplaceProtectedRoute>} />
+                <Route path="/marketplace/events/:eventId/vendors" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceVendorDiscovery /></MarketplaceProtectedRoute>} />
+                <Route path="/marketplace/inquiries" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserInquiries /></MarketplaceProtectedRoute>} />
+                <Route path="/marketplace/events" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserEvents /></MarketplaceProtectedRoute>} />
+                <Route path="/marketplace/vendor/onboarding" element={<MarketplaceProtectedRoute allowedRoles={['vendor']}><MarketplaceVendorOnboarding /></MarketplaceProtectedRoute>} />
+                <Route path="/marketplace/vendor/dashboard" element={<MarketplaceProtectedRoute allowedRoles={['vendor']}><MarketplaceVendorDashboard /></MarketplaceProtectedRoute>} />
+                <Route path="/marketplace/vendor/:vendorId" element={<MarketplaceProtectedRoute><MarketplaceVendorDetail /></MarketplaceProtectedRoute>} />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   </ErrorBoundary>

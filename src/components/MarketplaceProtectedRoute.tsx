@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 interface MarketplaceProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: ('user' | 'vendor')[];
+  allowedRoles?: ('consumer' | 'vendor')[];
 }
 
 export const MarketplaceProtectedRoute = ({ 
@@ -71,7 +71,7 @@ export const MarketplaceProtectedRoute = ({
   }
 
   // Check role-based access
-  if (allowedRoles && userType && !allowedRoles.includes(userType as 'user' | 'vendor')) {
+  if (allowedRoles && userType && !allowedRoles.includes(userType as 'consumer' | 'vendor')) {
     // Redirect to appropriate dashboard based on role
     if (userType === 'vendor') {
       return <Navigate to="/marketplace/vendor/dashboard" replace />;
