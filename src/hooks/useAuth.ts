@@ -101,7 +101,7 @@ export function useAuth() {
   };
 
   const isVendor = profile?.user_type === 'vendor';
-  const isUser = profile?.user_type === 'user';
+  const isUser = profile?.user_type === 'consumer';
   const needsOnboarding = !profile?.user_type;
   const vendorNeedsSetup = isVendor && !vendor;
 

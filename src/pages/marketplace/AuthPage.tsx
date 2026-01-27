@@ -46,7 +46,7 @@ const AuthPage = () => {
           } else {
             navigate("/marketplace/vendor/dashboard");
           }
-        } else if (profile?.user_type === 'user') {
+        } else if (profile?.user_type === 'consumer') {
           navigate("/marketplace");
         } else {
           // No role set, stay on auth page for role selection
@@ -75,7 +75,7 @@ const AuthPage = () => {
           } else {
             navigate("/marketplace/vendor/dashboard");
           }
-        } else if (profile?.user_type === 'user') {
+        } else if (profile?.user_type === 'consumer') {
           navigate("/marketplace");
         }
       }
