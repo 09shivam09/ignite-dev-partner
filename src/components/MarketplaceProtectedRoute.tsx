@@ -19,43 +19,65 @@ export const MarketplaceProtectedRoute = ({
   const location = useLocation();
 
   useEffect(() => {
+    let mounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         setSession(session);
         
         if (session?.user) {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('user_type')
+              .eq('user_id', session.user.id)
+              .maybeSingle();
+            
+            if (mounted) setUserType(profile?.user_type || null);
+          } catch (error) {
+            console.error('Error fetching profile:', error);
+            if (mounted) setUserType(null);
+          }
+        } else {
+          setUserType(null);
+        }
+        
+        if (mounted) setLoading(false);
+      }
+    );
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
+      
+      setSession(session);
+      
+      if (session?.user) {
+        try {
           const { data: profile } = await supabase
             .from('profiles')
             .select('user_type')
             .eq('user_id', session.user.id)
             .maybeSingle();
           
-          setUserType(profile?.user_type || null);
-        } else {
-          setUserType(null);
+          if (mounted) setUserType(profile?.user_type || null);
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+          if (mounted) setUserType(null);
         }
-        
-        setLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-        
-        setUserType(profile?.user_type || null);
       }
       
-      setLoading(false);
+      if (mounted) setLoading(false);
+    }).catch((error) => {
+      console.error('Error getting session:', error);
+      if (mounted) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (loading) {
