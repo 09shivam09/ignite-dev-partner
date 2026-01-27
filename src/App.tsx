@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { MarketplaceProtectedRoute } from "./components/MarketplaceProtectedRoute";
 import { GoogleMapsProvider } from "./components/GoogleMapsProvider";
 import { AccessibilityProvider } from "./components/AccessibilityProvider";
 import { ThemeProvider } from "./components/ThemeProvider";
@@ -56,6 +57,17 @@ const AIEventPlanner = lazy(() => import("./pages/AIEventPlanner"));
 const VendorVerification = lazy(() => import("./pages/VendorVerification"));
 const PlannerToolkit = lazy(() => import("./pages/PlannerToolkit"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Marketplace pages
+const MarketplaceAuth = lazy(() => import("./pages/marketplace/AuthPage"));
+const MarketplaceUserHome = lazy(() => import("./pages/marketplace/UserHome"));
+const MarketplaceCreateEvent = lazy(() => import("./pages/marketplace/CreateEvent"));
+const MarketplaceVendorDiscovery = lazy(() => import("./pages/marketplace/VendorDiscovery"));
+const MarketplaceVendorOnboarding = lazy(() => import("./pages/marketplace/VendorOnboarding"));
+const MarketplaceVendorDashboard = lazy(() => import("./pages/marketplace/VendorDashboardPage"));
+const MarketplaceVendorDetail = lazy(() => import("./pages/marketplace/VendorDetailPage"));
+const MarketplaceUserInquiries = lazy(() => import("./pages/marketplace/UserInquiries"));
+const MarketplaceUserEvents = lazy(() => import("./pages/marketplace/UserEvents"));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center p-6">
@@ -122,6 +134,18 @@ const App = () => (
                         <Route path="/compare" element={<ProtectedRoute><VendorCompare /></ProtectedRoute>} />
                         <Route path="/ai-planner" element={<ProtectedRoute><AIEventPlanner /></ProtectedRoute>} />
                         <Route path="/toolkit" element={<ProtectedRoute><PlannerToolkit /></ProtectedRoute>} />
+                        
+                        {/* Event Marketplace Routes */}
+                        <Route path="/marketplace/auth" element={<MarketplaceAuth />} />
+                        <Route path="/marketplace" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceUserHome /></MarketplaceProtectedRoute>} />
+                        <Route path="/marketplace/events/create" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceCreateEvent /></MarketplaceProtectedRoute>} />
+                        <Route path="/marketplace/events/:eventId/vendors" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceVendorDiscovery /></MarketplaceProtectedRoute>} />
+                        <Route path="/marketplace/inquiries" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceUserInquiries /></MarketplaceProtectedRoute>} />
+                        <Route path="/marketplace/events" element={<MarketplaceProtectedRoute allowedRoles={['user']}><MarketplaceUserEvents /></MarketplaceProtectedRoute>} />
+                        <Route path="/marketplace/vendor/onboarding" element={<MarketplaceProtectedRoute allowedRoles={['vendor']}><MarketplaceVendorOnboarding /></MarketplaceProtectedRoute>} />
+                        <Route path="/marketplace/vendor/dashboard" element={<MarketplaceProtectedRoute allowedRoles={['vendor']}><MarketplaceVendorDashboard /></MarketplaceProtectedRoute>} />
+                        <Route path="/marketplace/vendor/:vendorId" element={<MarketplaceProtectedRoute><MarketplaceVendorDetail /></MarketplaceProtectedRoute>} />
+                        
                         <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />

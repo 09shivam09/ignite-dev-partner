@@ -445,8 +445,47 @@ export type Database = {
         }
         Relationships: []
       }
+      event_services: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          service_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          service_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_services_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
+          budget_max: number | null
+          budget_min: number | null
+          city: string | null
           created_at: string | null
           creator_id: string
           description: string | null
@@ -455,10 +494,14 @@ export type Database = {
           id: string
           is_public: boolean | null
           location: string | null
+          status: string | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          city?: string | null
           created_at?: string | null
           creator_id: string
           description?: string | null
@@ -467,10 +510,14 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           location?: string | null
+          status?: string | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          city?: string | null
           created_at?: string | null
           creator_id?: string
           description?: string | null
@@ -479,6 +526,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           location?: string | null
+          status?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -582,6 +630,60 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      inquiries: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          message: string | null
+          responded_at: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+          vendor_id: string
+          vendor_response: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          vendor_id: string
+          vendor_response?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          vendor_id?: string
+          vendor_response?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inquiries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inquiries_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1504,6 +1606,30 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          created_at: string | null
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       spatial_ref_sys: {
         Row: {
           auth_name: string | null
@@ -1674,7 +1800,10 @@ export type Database = {
           max_capacity: number | null
           metadata: Json | null
           name: string
+          price_max: number | null
+          price_min: number | null
           pricing_type: string | null
+          service_id: string | null
           updated_at: string | null
           vendor_id: string
         }
@@ -1690,7 +1819,10 @@ export type Database = {
           max_capacity?: number | null
           metadata?: Json | null
           name: string
+          price_max?: number | null
+          price_min?: number | null
           pricing_type?: string | null
+          service_id?: string | null
           updated_at?: string | null
           vendor_id: string
         }
@@ -1706,7 +1838,10 @@ export type Database = {
           max_capacity?: number | null
           metadata?: Json | null
           name?: string
+          price_max?: number | null
+          price_min?: number | null
           pricing_type?: string | null
+          service_id?: string | null
           updated_at?: string | null
           vendor_id?: string
         }
@@ -1716,6 +1851,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
           {
@@ -1736,6 +1878,7 @@ export type Database = {
           business_email: string | null
           business_name: string
           business_phone: string | null
+          city: string | null
           cover_image_url: string | null
           created_at: string | null
           id: string
@@ -1772,6 +1915,7 @@ export type Database = {
           business_email?: string | null
           business_name: string
           business_phone?: string | null
+          city?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           id?: string
@@ -1808,6 +1952,7 @@ export type Database = {
           business_email?: string | null
           business_name?: string
           business_phone?: string | null
+          city?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           id?: string
