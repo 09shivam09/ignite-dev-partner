@@ -16,7 +16,7 @@ export const EVENT_TYPES = [
 ] as const;
 
 export const USER_ROLES = {
-  USER: 'user',
+  USER: 'consumer',  // Must match profiles_user_type_check constraint
   VENDOR: 'vendor',
 } as const;
 
