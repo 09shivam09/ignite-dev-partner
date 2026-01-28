@@ -1,14 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { CITIES, EVENT_TYPES, INQUIRY_STATUS } from "@/lib/constants";
+import { 
+  getCityLabel, 
+  getEventTypeLabel, 
+  formatPriceRange,
+  getInquiryStatusVariant,
+  capitalizeFirst,
+  INQUIRY_STATUS 
+} from "@/lib/constants";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, LogOut, Check, X, Calendar, MapPin, IndianRupee, MessageSquare } from "lucide-react";
+import { Loader2, LogOut, Check, X, Calendar, MapPin, MessageSquare } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,14 +26,15 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import type { VendorInquiryWithRelations } from "@/types/marketplace";
 
 const VendorDashboardPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, vendor, profile, loading: authLoading, signOut } = useAuth();
+  const { vendor, loading: authLoading, signOut } = useAuth();
 
-  const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+  const [selectedInquiry, setSelectedInquiry] = useState<VendorInquiryWithRelations | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
   const [actionType, setActionType] = useState<'accept' | 'reject' | null>(null);
 
@@ -35,7 +43,9 @@ const VendorDashboardPage = () => {
     queryKey: ['vendor-inquiries', vendor?.id],
     queryFn: async () => {
       if (!vendor) return [];
-      const { data, error } = await supabase
+      
+      // Fetch inquiries
+      const { data: inquiriesData, error: inquiriesError } = await supabase
         .from('inquiries')
         .select(`
           *,
@@ -47,18 +57,27 @@ const VendorDashboardPage = () => {
             city,
             budget_min,
             budget_max
-          ),
-          profiles:user_id (
-            full_name,
-            email,
-            phone
           )
         `)
         .eq('vendor_id', vendor.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (inquiriesError) throw inquiriesError;
+      if (!inquiriesData || inquiriesData.length === 0) return [];
+
+      // Fetch profiles for each inquiry
+      const userIds = [...new Set(inquiriesData.map(i => i.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email, phone')
+        .in('user_id', userIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
+      return inquiriesData.map(inquiry => ({
+        ...inquiry,
+        profiles: profilesMap.get(inquiry.user_id) || null,
+      }));
     },
     enabled: !!vendor,
   });
@@ -106,7 +125,7 @@ const VendorDashboardPage = () => {
       setResponseMessage("");
       setActionType(null);
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message,
@@ -115,7 +134,7 @@ const VendorDashboardPage = () => {
     },
   });
 
-  const handleAction = (inquiry: any, action: 'accept' | 'reject') => {
+  const handleAction = (inquiry: VendorInquiryWithRelations, action: 'accept' | 'reject') => {
     setSelectedInquiry(inquiry);
     setActionType(action);
   };
@@ -133,14 +152,6 @@ const VendorDashboardPage = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/marketplace/auth");
-  };
-
-  const getCityLabel = (cityValue: string) => {
-    return CITIES.find(c => c.value === cityValue)?.label || cityValue;
-  };
-
-  const getEventTypeLabel = (typeValue: string) => {
-    return EVENT_TYPES.find(t => t.value === typeValue)?.label || typeValue;
   };
 
   const pendingCount = inquiries?.filter(i => i.status === 'pending').length || 0;
@@ -205,16 +216,24 @@ const VendorDashboardPage = () => {
         {/* Services */}
         <section>
           <h2 className="text-xl font-bold mb-4">Your Services</h2>
-          <div className="flex flex-wrap gap-2">
-            {vendorServices?.map((vs: any) => (
-              <Badge key={vs.id} variant="secondary" className="py-2 px-3">
-                {vs.services?.name || vs.name}
-                <span className="ml-2 text-muted-foreground">
-                  ₹{vs.price_min?.toLocaleString() || vs.base_price?.toLocaleString()} - ₹{vs.price_max?.toLocaleString() || vs.base_price?.toLocaleString()}
-                </span>
-              </Badge>
-            ))}
-          </div>
+          {vendorServices && vendorServices.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {vendorServices.map((vs) => (
+                <Badge key={vs.id} variant="secondary" className="py-2 px-3">
+                  {vs.services?.name || vs.name}
+                  <span className="ml-2 text-muted-foreground">
+                    {formatPriceRange(vs.price_min, vs.price_max || vs.base_price)}
+                  </span>
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="py-8 text-center">
+                <p className="text-muted-foreground">No services added yet</p>
+              </CardContent>
+            </Card>
+          )}
         </section>
 
         {/* Inquiries */}
@@ -227,19 +246,15 @@ const VendorDashboardPage = () => {
             </div>
           ) : inquiries && inquiries.length > 0 ? (
             <div className="space-y-4">
-              {inquiries.map((inquiry: any) => (
+              {inquiries.map((inquiry) => (
                 <Card key={inquiry.id} className={inquiry.status === 'pending' ? 'border-primary/50' : ''}>
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="font-semibold">{inquiry.events?.title}</h3>
-                          <Badge variant={
-                            inquiry.status === 'accepted' ? 'default' :
-                            inquiry.status === 'rejected' ? 'destructive' :
-                            'secondary'
-                          }>
-                            {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                          <Badge variant={getInquiryStatusVariant(inquiry.status)}>
+                            {capitalizeFirst(inquiry.status)}
                           </Badge>
                         </div>
 
@@ -254,9 +269,8 @@ const VendorDashboardPage = () => {
                             <MapPin className="h-4 w-4" />
                             {getCityLabel(inquiry.events?.city || '')}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <IndianRupee className="h-4 w-4" />
-                            ₹{inquiry.events?.budget_min?.toLocaleString()} - ₹{inquiry.events?.budget_max?.toLocaleString()}
+                          <div>
+                            {formatPriceRange(inquiry.events?.budget_min, inquiry.events?.budget_max)}
                           </div>
                           <div>
                             {getEventTypeLabel(inquiry.events?.event_type || '')}

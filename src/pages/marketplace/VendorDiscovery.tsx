@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { CITIES } from "@/lib/constants";
+import { getCityLabel, formatPriceRange } from "@/lib/constants";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, ArrowLeft, MapPin, IndianRupee, Star, Send, Check } from "lucide-react";
+import { Loader2, ArrowLeft, MapPin, Star, Send, Check, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,20 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-
-interface MatchedVendor {
-  id: string;
-  business_name: string;
-  business_description: string | null;
-  city: string;
-  rating: number | null;
-  total_reviews: number | null;
-  matchedServices: {
-    name: string;
-    price_min: number;
-    price_max: number;
-  }[];
-}
+import type { MatchedVendor, MatchedService, Event, VendorService } from "@/types/marketplace";
 
 const VendorDiscovery = () => {
   const navigate = useNavigate();
@@ -45,18 +32,54 @@ const VendorDiscovery = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sentInquiries, setSentInquiries] = useState<Set<string>>(new Set());
 
+  // If no eventId, show fallback UI prompting to create an event
+  if (!eventId) {
+    return (
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <Button 
+            variant="ghost" 
+            className="mb-4"
+            onClick={() => navigate('/marketplace')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <Search className="h-16 w-16 text-muted-foreground mb-6" />
+              <h2 className="text-2xl font-bold mb-3">Browse Vendors</h2>
+              <p className="text-muted-foreground max-w-md mb-6">
+                To see vendors that match your needs, create an event first. 
+                This helps us show you vendors in your city, within your budget, 
+                and offering the services you need.
+              </p>
+              <Button 
+                size="lg"
+                onClick={() => navigate('/marketplace/events/create')}
+              >
+                Create an Event
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   // Fetch event details
-  const { data: event, isLoading: eventLoading } = useQuery({
+  const { data: event, isLoading: eventLoading, error: eventError } = useQuery({
     queryKey: ['event', eventId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('events')
         .select('*')
         .eq('id', eventId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data as Event | null;
     },
     enabled: !!eventId,
   });
@@ -105,7 +128,7 @@ const VendorDiscovery = () => {
     queryFn: async (): Promise<MatchedVendor[]> => {
       if (!event || !eventServices || eventServices.length === 0) return [];
 
-      const requiredServiceIds = eventServices.map((es: any) => es.service_id);
+      const requiredServiceIds = eventServices.map((es) => es.service_id);
 
       // Fetch vendors in the same city
       const { data: vendors, error: vendorsError } = await supabase
@@ -138,10 +161,12 @@ const VendorDiscovery = () => {
       const matched: MatchedVendor[] = [];
 
       for (const vendor of vendors) {
+        const vendorServices = vendor.vendor_services as VendorService[] | null;
+        
         // Check if vendor offers at least one required service
-        const vendorServiceIds = vendor.vendor_services
-          ?.filter((vs: any) => vs.is_available && vs.service_id)
-          .map((vs: any) => vs.service_id) || [];
+        const vendorServiceIds = vendorServices
+          ?.filter((vs) => vs.is_available && vs.service_id)
+          .map((vs) => vs.service_id) || [];
 
         const hasRequiredService = requiredServiceIds.some((reqId: string) => 
           vendorServiceIds.includes(reqId)
@@ -150,25 +175,29 @@ const VendorDiscovery = () => {
         if (!hasRequiredService) continue;
 
         // Check if vendor's price range overlaps with event budget
-        const vendorPrices = vendor.vendor_services?.filter((vs: any) => 
-          vs.is_available && requiredServiceIds.includes(vs.service_id)
+        const matchingServices = vendorServices?.filter((vs) => 
+          vs.is_available && requiredServiceIds.includes(vs.service_id || '')
         ) || [];
 
         let priceOverlaps = false;
-        const matchedServices: { name: string; price_min: number; price_max: number }[] = [];
+        const matchedServices: MatchedService[] = [];
 
-        for (const vs of vendorPrices) {
+        for (const vs of matchingServices) {
           const priceMin = vs.price_min || vs.base_price || 0;
           const priceMax = vs.price_max || vs.base_price || 0;
           
+          // Normalize price range (ensure min <= max)
+          const normalizedMin = Math.min(priceMin, priceMax);
+          const normalizedMax = Math.max(priceMin, priceMax);
+          
           // Price range overlap: vendor's range overlaps with event's budget
           // Overlap exists if: vendor_min <= event_max AND vendor_max >= event_min
-          if (priceMin <= (event.budget_max || Infinity) && priceMax >= (event.budget_min || 0)) {
+          if (normalizedMin <= (event.budget_max || Infinity) && normalizedMax >= (event.budget_min || 0)) {
             priceOverlaps = true;
             matchedServices.push({
               name: vs.name,
-              price_min: priceMin,
-              price_max: priceMax,
+              price_min: normalizedMin,
+              price_max: normalizedMax,
             });
           }
         }
@@ -218,10 +247,11 @@ const VendorDiscovery = () => {
 
       setSelectedVendor(null);
       setInquiryMessage("");
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to send inquiry';
       toast({
         title: "Error",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -233,10 +263,6 @@ const VendorDiscovery = () => {
     return sentInquiries.has(vendorId) || existingInquiries?.includes(vendorId);
   };
 
-  const getCityLabel = (cityValue: string) => {
-    return CITIES.find(c => c.value === cityValue)?.label || cityValue;
-  };
-
   if (eventLoading || vendorsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -245,10 +271,31 @@ const VendorDiscovery = () => {
     );
   }
 
-  if (!event) {
+  if (eventError || !event) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Event not found</p>
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <Button 
+            variant="ghost" 
+            className="mb-4"
+            onClick={() => navigate('/marketplace')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="text-4xl mb-4">❌</div>
+              <h3 className="font-semibold mb-2">Event not found</h3>
+              <p className="text-sm text-muted-foreground max-w-md mb-4">
+                This event may have been deleted or you don't have access to it.
+              </p>
+              <Button onClick={() => navigate('/marketplace/events/create')}>
+                Create New Event
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -271,12 +318,12 @@ const VendorDiscovery = () => {
             <CardTitle>{event.title}</CardTitle>
             <CardDescription>
               Finding vendors in {getCityLabel(event.city || '')} • 
-              Budget: ₹{event.budget_min?.toLocaleString()} - ₹{event.budget_max?.toLocaleString()}
+              Budget: {formatPriceRange(event.budget_min, event.budget_max)}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {eventServices?.map((es: any) => (
+              {eventServices?.map((es) => (
                 <Badge key={es.service_id} variant="secondary">
                   {es.services?.name}
                 </Badge>
@@ -328,7 +375,7 @@ const VendorDiscovery = () => {
                             <Badge key={idx} variant="outline" className="flex items-center gap-1">
                               {service.name}
                               <span className="text-muted-foreground">
-                                ₹{service.price_min.toLocaleString()} - ₹{service.price_max.toLocaleString()}
+                                {formatPriceRange(service.price_min, service.price_max)}
                               </span>
                             </Badge>
                           ))}
