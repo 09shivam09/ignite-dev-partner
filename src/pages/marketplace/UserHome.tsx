@@ -1,12 +1,12 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { EVENT_TYPES } from "@/lib/constants";
+import { EVENT_TYPES, getEventTypeLabel, getInquiryStatusVariant, capitalizeFirst } from "@/lib/constants";
 import { Loader2, Plus, Calendar, Search, LogOut, User } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Event, InquiryWithRelations } from "@/types/marketplace";
 
 const UserHome = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const UserHome = () => {
   // Fetch user's events
   const { data: events, isLoading: eventsLoading } = useQuery({
     queryKey: ['user-events', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<Event[]> => {
       if (!user) return [];
       const { data, error } = await supabase
         .from('events')
@@ -24,7 +24,7 @@ const UserHome = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as Event[];
     },
     enabled: !!user,
   });
@@ -32,7 +32,7 @@ const UserHome = () => {
   // Fetch user's inquiries
   const { data: inquiries, isLoading: inquiriesLoading } = useQuery({
     queryKey: ['user-inquiries', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<InquiryWithRelations[]> => {
       if (!user) return [];
       const { data, error } = await supabase
         .from('inquiries')
@@ -54,7 +54,7 @@ const UserHome = () => {
         .limit(5);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as InquiryWithRelations[];
     },
     enabled: !!user,
   });
@@ -112,7 +112,7 @@ const UserHome = () => {
             <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/marketplace/vendors')}>
               <CardContent className="flex items-center gap-4 p-6">
                 <div className="p-3 rounded-full bg-accent/10">
-                  <Search className="h-6 w-6 text-accent" />
+                  <Search className="h-6 w-6 text-accent-foreground" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Browse Vendors</h3>
@@ -170,7 +170,7 @@ const UserHome = () => {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg">{event.title}</CardTitle>
                     <CardDescription>
-                      {EVENT_TYPES.find(t => t.value === event.event_type)?.label || event.event_type}
+                      {getEventTypeLabel(event.event_type || '')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -221,7 +221,7 @@ const UserHome = () => {
             </div>
           ) : inquiries && inquiries.length > 0 ? (
             <div className="space-y-3">
-              {inquiries.map((inquiry: any) => (
+              {inquiries.map((inquiry) => (
                 <Card key={inquiry.id}>
                   <CardContent className="flex items-center justify-between p-4">
                     <div>
@@ -231,11 +231,11 @@ const UserHome = () => {
                       </p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      inquiry.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                      inquiry.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
+                      inquiry.status === 'accepted' ? 'bg-primary/10 text-primary' :
+                      inquiry.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                      'bg-muted text-muted-foreground'
                     }`}>
-                      {inquiry.status.charAt(0).toUpperCase() + inquiry.status.slice(1)}
+                      {capitalizeFirst(inquiry.status)}
                     </span>
                   </CardContent>
                 </Card>

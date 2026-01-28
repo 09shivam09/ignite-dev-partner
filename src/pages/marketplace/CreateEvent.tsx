@@ -63,7 +63,7 @@ const CreateEvent = () => {
     const budgetMin = parseInt(formData.budgetMin);
     const budgetMax = parseInt(formData.budgetMax);
 
-    if (budgetMin <= 0 || budgetMax <= 0) {
+    if (isNaN(budgetMin) || isNaN(budgetMax) || budgetMin <= 0 || budgetMax <= 0) {
       toast({
         title: "Error",
         description: "Please enter a valid budget range",
@@ -72,14 +72,9 @@ const CreateEvent = () => {
       return;
     }
 
-    if (budgetMin > budgetMax) {
-      toast({
-        title: "Error",
-        description: "Minimum budget cannot be greater than maximum budget",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Enforce price_min <= price_max at input time
+    const normalizedBudgetMin = Math.min(budgetMin, budgetMax);
+    const normalizedBudgetMax = Math.max(budgetMin, budgetMax);
 
     setIsLoading(true);
 
@@ -93,8 +88,8 @@ const CreateEvent = () => {
           event_type: formData.eventType,
           city: formData.city,
           event_date: formData.eventDate || null,
-          budget_min: budgetMin,
-          budget_max: budgetMax,
+          budget_min: normalizedBudgetMin,
+          budget_max: normalizedBudgetMax,
           status: 'active',
           is_public: false,
         })
@@ -121,10 +116,11 @@ const CreateEvent = () => {
       });
 
       navigate(`/marketplace/events/${event.id}/vendors`);
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to create event';
       toast({
         title: "Error",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } finally {
