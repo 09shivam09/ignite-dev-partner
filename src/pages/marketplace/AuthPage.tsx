@@ -10,6 +10,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, PartyPopper, Store } from "lucide-react";
 import { USER_ROLES, type UserRole } from "@/lib/constants";
 
+const AUTH_TIMEOUT_MS = 15000;
+
+const withTimeout = async <T,>(
+  promise: PromiseLike<T>,
+  ms: number,
+  label: string
+): Promise<T> => {
+  let timeoutId: number | undefined;
+  const task = Promise.resolve(promise);
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = window.setTimeout(() => {
+      reject(new Error(`${label} timed out. Please try again.`));
+    }, ms);
+  });
+
+  try {
+    return await Promise.race([task, timeoutPromise]);
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  }
+};
+
 const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -87,11 +109,13 @@ const AuthPage = () => {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log("[AuthPage] auth submit", { mode: isSignUp ? "signup" : "signin" });
 
     try {
       if (isSignUp) {
         // Sign up
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await withTimeout(
+          supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
@@ -101,18 +125,25 @@ const AuthPage = () => {
               user_type: formData.role,
             }
           }
-        });
+          }),
+          AUTH_TIMEOUT_MS,
+          "Sign up"
+        );
 
         if (error) throw error;
 
         if (data.user) {
           // Create profile with role
-          const { error: profileError } = await supabase.from('profiles').insert({
-            user_id: data.user.id,
-            full_name: formData.fullName,
-            email: formData.email,
-            user_type: formData.role,
-          });
+          const { error: profileError } = await withTimeout(
+            supabase.from('profiles').insert({
+              user_id: data.user.id,
+              full_name: formData.fullName,
+              email: formData.email,
+              user_type: formData.role,
+            }),
+            AUTH_TIMEOUT_MS,
+            "Create profile"
+          );
 
           if (profileError && !profileError.message.includes('duplicate')) {
             throw profileError;
@@ -126,10 +157,14 @@ const AuthPage = () => {
         setIsSignUp(false);
       } else {
         // Sign in
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
+        const { error } = await withTimeout(
+          supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          }),
+          AUTH_TIMEOUT_MS,
+          "Sign in"
+        );
 
         if (error) throw error;
 
@@ -139,13 +174,15 @@ const AuthPage = () => {
         });
       }
     } catch (error: any) {
+      console.error("[AuthPage] auth error", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error?.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+      console.log("[AuthPage] auth done");
     }
   };
 

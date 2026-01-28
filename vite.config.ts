@@ -15,6 +15,12 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Prevent service worker install/caching from interfering with auth flows in preview/dev.
+      // (Still allows production PWA builds if/when you publish.)
+      injectRegister: mode === 'production' ? 'auto' : null,
+      devOptions: {
+        enabled: false,
+      },
       includeAssets: ['favicon.ico', 'robots.txt'],
       manifest: {
         name: 'EVENT-CONNECT',
