@@ -89,18 +89,62 @@ function useProvideAuth(): UseAuthValue {
       setLoading(true);
 
       try {
+        // Load profile
         const { data: profileData } = await withTimeout(
           supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
-          12000,
+          25000,
           'Profile load'
         );
         if (!mounted) return;
-        setProfile(profileData);
+        let resolvedProfile = profileData as Profile | null;
 
-        if (profileData?.user_type === 'vendor') {
+        // If profile doesn't exist yet (common if a user was created without our signup flow),
+        // create it from auth metadata so login can proceed smoothly.
+        if (!resolvedProfile) {
+          const meta = (nextSession.user.user_metadata ?? {}) as Record<string, unknown>;
+          const inferredType = (meta.user_type as string | undefined) ?? null;
+          const inferredName = (meta.full_name as string | undefined) ?? (nextSession.user.email ?? null);
+
+          const { data: created, error: createError } = await withTimeout(
+            supabase
+              .from('profiles')
+              .insert({
+                user_id: userId,
+                email: nextSession.user.email ?? null,
+                full_name: inferredName,
+                user_type: inferredType,
+              })
+              .select('*')
+              .maybeSingle(),
+            25000,
+            'Profile create'
+          );
+
+          // Ignore duplicates (another tab / race) and just re-fetch.
+          if (createError && !createError.message?.toLowerCase().includes('duplicate')) {
+            console.error('Error creating profile on login:', createError);
+          }
+
+          if (!mounted) return;
+          if (created) {
+            resolvedProfile = created as Profile;
+          } else {
+            const { data: refetched } = await withTimeout(
+              supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
+              25000,
+              'Profile reload'
+            );
+            if (!mounted) return;
+            resolvedProfile = (refetched as Profile | null) ?? null;
+          }
+        }
+
+        setProfile(resolvedProfile);
+
+        if (resolvedProfile?.user_type === 'vendor') {
           const { data: vendorData } = await withTimeout(
             supabase.from('vendors').select('*').eq('user_id', userId).maybeSingle(),
-            12000,
+            25000,
             'Vendor load'
           );
           if (!mounted) return;
@@ -119,11 +163,12 @@ function useProvideAuth(): UseAuthValue {
     };
 
     // Auth state listener (Supabase emits INITIAL_SESSION immediately)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, nextSession) => {
-        await loadForSession(nextSession);
-      }
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      // IMPORTANT: Do not await here.
+      // Supabase auth waits for subscribers; awaiting slow profile loads can cause
+      // signInWithPassword() to appear "stuck" even when /token succeeds.
+      void loadForSession(nextSession);
+    });
 
     return () => {
       mounted = false;
