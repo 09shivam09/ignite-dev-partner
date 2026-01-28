@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Session } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
 interface MarketplaceProtectedRouteProps {
@@ -13,72 +11,8 @@ export const MarketplaceProtectedRoute = ({
   children, 
   allowedRoles 
 }: MarketplaceProtectedRouteProps) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [userType, setUserType] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { session, profile, loading } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    let mounted = true;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-        
-        setSession(session);
-        
-        if (session?.user) {
-          try {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('user_type')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
-            
-            if (mounted) setUserType(profile?.user_type || null);
-          } catch (error) {
-            console.error('Error fetching profile:', error);
-            if (mounted) setUserType(null);
-          }
-        } else {
-          setUserType(null);
-        }
-        
-        if (mounted) setLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      
-      setSession(session);
-      
-      if (session?.user) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('user_type')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-          
-          if (mounted) setUserType(profile?.user_type || null);
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-          if (mounted) setUserType(null);
-        }
-      }
-      
-      if (mounted) setLoading(false);
-    }).catch((error) => {
-      console.error('Error getting session:', error);
-      if (mounted) setLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
 
   if (loading) {
     return (
@@ -93,6 +27,7 @@ export const MarketplaceProtectedRoute = ({
   }
 
   // Check role-based access
+  const userType = profile?.user_type;
   if (allowedRoles && userType && !allowedRoles.includes(userType as 'consumer' | 'vendor')) {
     // Redirect to appropriate dashboard based on role
     if (userType === 'vendor') {
