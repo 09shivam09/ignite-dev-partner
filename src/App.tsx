@@ -50,6 +50,7 @@ const App = () => (
                 <Route path="/marketplace/auth" element={<MarketplaceAuth />} />
                 <Route path="/marketplace" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserHome /></MarketplaceProtectedRoute>} />
                 <Route path="/marketplace/events/create" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceCreateEvent /></MarketplaceProtectedRoute>} />
+                <Route path="/marketplace/vendors" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceVendorDiscovery /></MarketplaceProtectedRoute>} />
                 <Route path="/marketplace/events/:eventId/vendors" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceVendorDiscovery /></MarketplaceProtectedRoute>} />
                 <Route path="/marketplace/inquiries" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserInquiries /></MarketplaceProtectedRoute>} />
                 <Route path="/marketplace/events" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserEvents /></MarketplaceProtectedRoute>} />
