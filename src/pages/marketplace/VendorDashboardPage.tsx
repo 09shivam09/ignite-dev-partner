@@ -262,20 +262,42 @@ const VendorDashboardPage = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="dashboard" className="gap-2">
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2">
-              <Settings className="h-4 w-4" />
-              Settings
-            </TabsTrigger>
-            <TabsTrigger value="help" className="gap-2">
-              <HelpCircle className="h-4 w-4" />
-              Help
-            </TabsTrigger>
-          </TabsList>
+          {/* Tab row with Health & Service Highlights beside tabs */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <TabsList>
+              <TabsTrigger value="dashboard" className="gap-2">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
+              </TabsTrigger>
+              <TabsTrigger value="help" className="gap-2">
+                <HelpCircle className="h-4 w-4" />
+                Help
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Health & Services Highlights - beside tabs */}
+            <div className="flex flex-wrap items-stretch gap-3">
+              {vendorData && vendorServices && (
+                <VendorHealthIndicator
+                  vendor={vendorData}
+                  vendorServices={vendorServices}
+                  inquiryStats={{
+                    total: metrics.totalInquiries,
+                    accepted: metrics.acceptedCount,
+                    rejected: metrics.rejectedCount,
+                    pending: metrics.pendingCount,
+                  }}
+                />
+              )}
+              {vendorServices && vendorServices.length > 0 && (
+                <ServiceHighlights services={vendorServices} />
+              )}
+            </div>
+          </div>
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
@@ -292,25 +314,13 @@ const VendorDashboardPage = () => {
 
             {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Profile & Health */}
+              {/* Left Column - Profile */}
               <div className="lg:col-span-1 space-y-6">
                 {vendorData && vendorServices && (
-                  <>
-                    <ProfileCompletionCard 
-                      vendor={vendorData} 
-                      vendorServices={vendorServices} 
-                    />
-                    <VendorHealthIndicator
-                      vendor={vendorData}
-                      vendorServices={vendorServices}
-                      inquiryStats={{
-                        total: metrics.totalInquiries,
-                        accepted: metrics.acceptedCount,
-                        rejected: metrics.rejectedCount,
-                        pending: metrics.pendingCount,
-                      }}
-                    />
-                  </>
+                  <ProfileCompletionCard 
+                    vendor={vendorData} 
+                    vendorServices={vendorServices} 
+                  />
                 )}
                 
                 {/* Services List */}
@@ -351,11 +361,6 @@ const VendorDashboardPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Seasonal Readiness */}
               <SeasonalReadinessToggle />
-              
-              {/* Service Highlights */}
-              {vendorServices && (
-                <ServiceHighlights services={vendorServices} />
-              )}
 
               {/* Media Guidance */}
               <MediaGuidance />

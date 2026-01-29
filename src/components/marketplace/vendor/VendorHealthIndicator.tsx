@@ -2,11 +2,15 @@ import { Badge } from "@/components/ui/badge";
 import { 
   CheckCircle2, 
   AlertCircle,
-  FileText,
-  Clock,
-  Power
+  Heart
 } from "lucide-react";
 import type { Vendor, VendorService } from "@/types/marketplace";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface VendorHealthIndicatorProps {
   vendor: Vendor;
@@ -20,7 +24,7 @@ interface VendorHealthIndicatorProps {
 }
 
 /**
- * Vendor Health Indicator - Compact horizontal layout
+ * Vendor Health Indicator - Compact inline badge
  * Derives health status based on:
  * - Profile completeness (40%)
  * - Inquiry response rate (40%)
@@ -61,99 +65,51 @@ export const VendorHealthIndicator = ({
 
   const status: 'good' | 'needs-improvement' = healthScore >= 60 ? 'good' : 'needs-improvement';
 
-  const factors = [
-    {
-      label: "Profile",
-      value: `${profileScore}%`,
-      icon: FileText,
-      isGood: profileScore >= 75,
-    },
-    {
-      label: "Response",
-      value: needsResponseCount > 0 ? `${responseRate}%` : "—",
-      icon: Clock,
-      isGood: responseRate >= 70,
-    },
-    {
-      label: "Status",
-      value: isAvailable ? "Active" : "Paused",
-      icon: Power,
-      isGood: isAvailable,
-    },
-  ];
-
   return (
-    <div className="p-4 rounded-xl border bg-card">
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
           <div 
-            className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-default ${
               status === 'good' 
-                ? 'bg-green-500/15 text-green-600 dark:text-green-400' 
-                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                ? 'bg-green-500/10 border-green-500/30' 
+                : 'bg-amber-500/10 border-amber-500/30'
             }`}
           >
-            {healthScore}
-          </div>
-          <div>
-            <p className="text-sm font-medium">Vendor Health</p>
-            <p className="text-xs text-muted-foreground">Overall score</p>
-          </div>
-        </div>
-        <Badge 
-          variant="secondary"
-          className={`${
-            status === 'good' 
-              ? 'bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30' 
-              : 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30'
-          }`}
-        >
-          {status === 'good' ? (
-            <>
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              Good
-            </>
-          ) : (
-            <>
-              <AlertCircle className="h-3 w-3 mr-1" />
-              Improve
-            </>
-          )}
-        </Badge>
-      </div>
-
-      {/* Factors row */}
-      <div className="grid grid-cols-3 gap-2">
-        {factors.map((factor, index) => {
-          const FactorIcon = factor.icon;
-          return (
-            <div 
-              key={index} 
-              className={`flex flex-col items-center p-2 rounded-lg ${
-                factor.isGood ? 'bg-green-500/10' : 'bg-amber-500/10'
+            <Heart className={`h-4 w-4 ${
+              status === 'good' ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
+            }`} />
+            <span className="text-sm font-medium">Health</span>
+            <Badge 
+              variant="secondary"
+              className={`text-xs ${
+                status === 'good' 
+                  ? 'bg-green-500/20 text-green-700 dark:text-green-400' 
+                  : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
               }`}
             >
-              <FactorIcon className={`h-4 w-4 mb-1 ${
-                factor.isGood ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
-              }`} />
-              <span className={`text-xs font-medium ${
-                factor.isGood ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'
-              }`}>
-                {factor.value}
-              </span>
-              <span className="text-[10px] text-muted-foreground">{factor.label}</span>
+              {healthScore}
+              {status === 'good' ? (
+                <CheckCircle2 className="h-3 w-3 ml-1" />
+              ) : (
+                <AlertCircle className="h-3 w-3 ml-1" />
+              )}
+            </Badge>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-xs">
+          <div className="space-y-1">
+            <p className="font-medium text-sm">
+              {status === 'good' ? 'Good standing' : 'Needs improvement'}
+            </p>
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              <p>Profile: {profileScore}%</p>
+              <p>Response: {needsResponseCount > 0 ? `${responseRate}%` : 'No data'}</p>
+              <p>Status: {isAvailable ? 'Active' : 'Paused'}</p>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Tip */}
-      {status === 'needs-improvement' && (
-        <p className="text-xs text-muted-foreground mt-3 text-center">
-          Complete your profile and respond quickly to improve your score.
-        </p>
-      )}
-    </div>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
