@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Loader2, PartyPopper, Store } from "lucide-react";
 import { USER_ROLES, type UserRole } from "@/lib/constants";
 
@@ -35,6 +36,8 @@ const withTimeout = async <T,>(
 const AuthPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { session, profile, vendor, loading: authLoading } = useAuth();
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
@@ -44,67 +47,23 @@ const AuthPage = () => {
     role: USER_ROLES.USER as UserRole,
   });
 
+  // Redirect based on auth state from centralized useAuth
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Check if user has profile with role
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-
-        if (profile?.user_type === 'vendor') {
-          // Check if vendor profile exists
-          const { data: vendor } = await supabase
-            .from('vendors')
-            .select('id')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-
-          if (!vendor) {
-            navigate("/marketplace/vendor/onboarding");
-          } else {
-            navigate("/marketplace/vendor/dashboard");
-          }
-        } else if (profile?.user_type === 'consumer') {
-          navigate("/marketplace");
+    if (authLoading) return;
+    
+    if (session && profile) {
+      if (profile.user_type === 'vendor') {
+        if (vendor) {
+          navigate("/marketplace/vendor/dashboard", { replace: true });
         } else {
-          // No role set, stay on auth page for role selection
+          navigate("/marketplace/vendor/onboarding", { replace: true });
         }
+      } else if (profile.user_type === 'consumer') {
+        navigate("/marketplace", { replace: true });
       }
-    };
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('user_id', session.user.id)
-          .maybeSingle();
-
-        if (profile?.user_type === 'vendor') {
-          const { data: vendor } = await supabase
-            .from('vendors')
-            .select('id')
-            .eq('user_id', session.user.id)
-            .maybeSingle();
-
-          if (!vendor) {
-            navigate("/marketplace/vendor/onboarding");
-          } else {
-            navigate("/marketplace/vendor/dashboard");
-          }
-        } else if (profile?.user_type === 'consumer') {
-          navigate("/marketplace");
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+      // If no user_type, stay on auth page (edge case)
+    }
+  }, [session, profile, vendor, authLoading, navigate]);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,6 +131,7 @@ const AuthPage = () => {
           title: "Welcome back!",
           description: "You've successfully signed in.",
         });
+        // Navigation will be handled by the useEffect above when auth state updates
       }
     } catch (error: any) {
       console.error("[AuthPage] auth error", error);
@@ -185,6 +145,15 @@ const AuthPage = () => {
       console.log("[AuthPage] auth done");
     }
   };
+
+  // Show loading while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 flex items-center justify-center p-4">

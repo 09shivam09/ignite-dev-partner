@@ -1,32 +1,21 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  getCityLabel, 
-  getEventTypeLabel, 
-  formatPriceRange,
-  getInquiryStatusVariant,
-  capitalizeFirst,
-  INQUIRY_STATUS 
-} from "@/lib/constants";
+import { INQUIRY_STATUS } from "@/lib/constants";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, LogOut, Check, X, Calendar, MapPin, MessageSquare } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import type { VendorInquiryWithRelations } from "@/types/marketplace";
+import { Loader2, LogOut, RefreshCw } from "lucide-react";
+import type { VendorInquiryWithRelations, VendorService } from "@/types/marketplace";
+
+// Import vendor dashboard components
+import { VendorMetricsCards } from "@/components/marketplace/vendor/VendorMetricsCards";
+import { ProfileCompletionCard } from "@/components/marketplace/vendor/ProfileCompletionCard";
+import { AvailabilityToggle } from "@/components/marketplace/vendor/AvailabilityToggle";
+import { VendorServicesList } from "@/components/marketplace/vendor/VendorServicesList";
+import { VendorInquiryList } from "@/components/marketplace/vendor/VendorInquiryList";
+import { InquiryActionDialog } from "@/components/marketplace/vendor/InquiryActionDialog";
 
 const VendorDashboardPage = () => {
   const navigate = useNavigate();
@@ -38,13 +27,28 @@ const VendorDashboardPage = () => {
   const [responseMessage, setResponseMessage] = useState("");
   const [actionType, setActionType] = useState<'accept' | 'reject' | null>(null);
 
+  // Fetch vendor's full data (for profile completion)
+  const { data: vendorData, refetch: refetchVendor } = useQuery({
+    queryKey: ['vendor-full', vendor?.id],
+    queryFn: async () => {
+      if (!vendor) return null;
+      const { data, error } = await supabase
+        .from('vendors')
+        .select('*')
+        .eq('id', vendor.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!vendor,
+  });
+
   // Fetch vendor's inquiries
-  const { data: inquiries, isLoading: inquiriesLoading } = useQuery({
+  const { data: inquiries, isLoading: inquiriesLoading, refetch: refetchInquiries } = useQuery({
     queryKey: ['vendor-inquiries', vendor?.id],
     queryFn: async () => {
       if (!vendor) return [];
       
-      // Fetch inquiries
       const { data: inquiriesData, error: inquiriesError } = await supabase
         .from('inquiries')
         .select(`
@@ -77,7 +81,7 @@ const VendorDashboardPage = () => {
       return inquiriesData.map(inquiry => ({
         ...inquiry,
         profiles: profilesMap.get(inquiry.user_id) || null,
-      }));
+      })) as VendorInquiryWithRelations[];
     },
     enabled: !!vendor,
   });
@@ -91,15 +95,46 @@ const VendorDashboardPage = () => {
         .from('vendor_services')
         .select(`
           *,
-          services (name)
+          services (id, name, slug, icon)
         `)
         .eq('vendor_id', vendor.id);
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as VendorService[];
     },
     enabled: !!vendor,
   });
+
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    if (!inquiries) {
+      return {
+        newCount: 0,
+        pendingCount: 0,
+        acceptedCount: 0,
+        rejectedCount: 0,
+        totalInquiries: 0,
+        lastInquiryTime: null,
+      };
+    }
+
+    const now = new Date();
+    const newInquiries = inquiries.filter(i => {
+      if (i.status !== 'pending') return false;
+      const createdAt = new Date(i.created_at);
+      const hoursDiff = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+      return hoursDiff < 24;
+    });
+
+    return {
+      newCount: newInquiries.length,
+      pendingCount: inquiries.filter(i => i.status === 'pending').length,
+      acceptedCount: inquiries.filter(i => i.status === 'accepted').length,
+      rejectedCount: inquiries.filter(i => i.status === 'rejected').length,
+      totalInquiries: inquiries.length,
+      lastInquiryTime: inquiries[0]?.created_at || null,
+    };
+  }, [inquiries]);
 
   const updateInquiryMutation = useMutation({
     mutationFn: async ({ inquiryId, status, response }: { inquiryId: string; status: string; response?: string }) => {
@@ -118,12 +153,12 @@ const VendorDashboardPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendor-inquiries'] });
       toast({
-        title: "Success",
-        description: `Inquiry ${actionType === 'accept' ? 'accepted' : 'rejected'} successfully`,
+        title: actionType === 'accept' ? "Inquiry Accepted!" : "Inquiry Rejected",
+        description: actionType === 'accept' 
+          ? "The client can now see your contact details" 
+          : "The client has been notified",
       });
-      setSelectedInquiry(null);
-      setResponseMessage("");
-      setActionType(null);
+      handleCloseDialog();
     },
     onError: (error: Error) => {
       toast({
@@ -137,6 +172,12 @@ const VendorDashboardPage = () => {
   const handleAction = (inquiry: VendorInquiryWithRelations, action: 'accept' | 'reject') => {
     setSelectedInquiry(inquiry);
     setActionType(action);
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedInquiry(null);
+    setActionType(null);
+    setResponseMessage("");
   };
 
   const confirmAction = () => {
@@ -154,8 +195,10 @@ const VendorDashboardPage = () => {
     navigate("/marketplace/auth");
   };
 
-  const pendingCount = inquiries?.filter(i => i.status === 'pending').length || 0;
-  const acceptedCount = inquiries?.filter(i => i.status === 'accepted').length || 0;
+  const handleRefresh = () => {
+    refetchInquiries();
+    refetchVendor();
+  };
 
   if (authLoading) {
     return (
@@ -179,8 +222,16 @@ const VendorDashboardPage = () => {
             <h1 className="text-xl font-bold text-primary">🎉 EventConnect</h1>
             <p className="text-sm text-muted-foreground">Vendor Dashboard</p>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleRefresh}
+              className="text-muted-foreground"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-muted-foreground hidden sm:inline">
               {vendor.business_name}
             </span>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -190,216 +241,71 @@ const VendorDashboardPage = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-        {/* Stats */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold">{pendingCount}</div>
-              <p className="text-sm text-muted-foreground">Pending Inquiries</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold">{acceptedCount}</div>
-              <p className="text-sm text-muted-foreground">Accepted</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold">{vendorServices?.length || 0}</div>
-              <p className="text-sm text-muted-foreground">Services Offered</p>
-            </CardContent>
-          </Card>
-        </section>
+      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Availability Toggle */}
+        {vendorData && (
+          <AvailabilityToggle 
+            vendor={vendorData} 
+            onUpdate={() => refetchVendor()} 
+          />
+        )}
 
-        {/* Services */}
-        <section>
-          <h2 className="text-xl font-bold mb-4">Your Services</h2>
-          {vendorServices && vendorServices.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {vendorServices.map((vs) => (
-                <Badge key={vs.id} variant="secondary" className="py-2 px-3">
-                  {vs.services?.name || vs.name}
-                  <span className="ml-2 text-muted-foreground">
-                    {formatPriceRange(vs.price_min, vs.price_max || vs.base_price)}
-                  </span>
-                </Badge>
-              ))}
+        {/* Metrics Cards */}
+        <VendorMetricsCards {...metrics} />
+
+        {/* Two Column Layout for smaller cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Profile Completion */}
+          <div className="lg:col-span-1 space-y-6">
+            {vendorData && vendorServices && (
+              <ProfileCompletionCard 
+                vendor={vendorData} 
+                vendorServices={vendorServices} 
+              />
+            )}
+            
+            {/* Services List */}
+            {vendorServices && (
+              <VendorServicesList services={vendorServices} />
+            )}
+          </div>
+
+          {/* Inquiries */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Inquiries</h2>
+              {metrics.pendingCount > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {metrics.pendingCount} need{metrics.pendingCount === 1 ? 's' : ''} response
+                </span>
+              )}
             </div>
-          ) : (
-            <Card className="border-dashed">
-              <CardContent className="py-8 text-center">
-                <p className="text-muted-foreground">No services added yet</p>
-              </CardContent>
-            </Card>
-          )}
-        </section>
-
-        {/* Inquiries */}
-        <section>
-          <h2 className="text-xl font-bold mb-4">Inquiries</h2>
-          
-          {inquiriesLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
-          ) : inquiries && inquiries.length > 0 ? (
-            <div className="space-y-4">
-              {inquiries.map((inquiry) => (
-                <Card key={inquiry.id} className={inquiry.status === 'pending' ? 'border-primary/50' : ''}>
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold">{inquiry.events?.title}</h3>
-                          <Badge variant={getInquiryStatusVariant(inquiry.status)}>
-                            {capitalizeFirst(inquiry.status)}
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {inquiry.events?.event_date 
-                              ? new Date(inquiry.events.event_date).toLocaleDateString() 
-                              : 'Date TBD'}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {getCityLabel(inquiry.events?.city || '')}
-                          </div>
-                          <div>
-                            {formatPriceRange(inquiry.events?.budget_min, inquiry.events?.budget_max)}
-                          </div>
-                          <div>
-                            {getEventTypeLabel(inquiry.events?.event_type || '')}
-                          </div>
-                        </div>
-
-                        <div className="text-sm">
-                          <p className="font-medium">From: {inquiry.profiles?.full_name || 'User'}</p>
-                          {inquiry.profiles?.email && (
-                            <p className="text-muted-foreground">{inquiry.profiles.email}</p>
-                          )}
-                        </div>
-
-                        {inquiry.message && (
-                          <div className="mt-3 p-3 bg-muted rounded-lg">
-                            <div className="flex items-center gap-1 text-xs font-medium mb-1">
-                              <MessageSquare className="h-3 w-3" />
-                              Message
-                            </div>
-                            <p className="text-sm">{inquiry.message}</p>
-                          </div>
-                        )}
-
-                        {inquiry.vendor_response && (
-                          <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                            <div className="text-xs font-medium mb-1">Your Response</div>
-                            <p className="text-sm">{inquiry.vendor_response}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {inquiry.status === 'pending' && (
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm"
-                            onClick={() => handleAction(inquiry, 'accept')}
-                            className="flex items-center gap-1"
-                          >
-                            <Check className="h-4 w-4" />
-                            Accept
-                          </Button>
-                          <Button 
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleAction(inquiry, 'reject')}
-                            className="flex items-center gap-1"
-                          >
-                            <X className="h-4 w-4" />
-                            Reject
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card className="border-dashed">
-              <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="font-semibold mb-2">No inquiries yet</h3>
-                <p className="text-sm text-muted-foreground">
-                  When users send you inquiries, they'll appear here
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </section>
+            
+            {inquiriesLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <VendorInquiryList 
+                inquiries={inquiries || []}
+                onAccept={(inquiry) => handleAction(inquiry, 'accept')}
+                onReject={(inquiry) => handleAction(inquiry, 'reject')}
+              />
+            )}
+          </div>
+        </div>
       </main>
 
       {/* Action Dialog */}
-      <Dialog open={!!selectedInquiry && !!actionType} onOpenChange={() => {
-        setSelectedInquiry(null);
-        setActionType(null);
-        setResponseMessage("");
-      }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {actionType === 'accept' ? 'Accept Inquiry' : 'Reject Inquiry'}
-            </DialogTitle>
-            <DialogDescription>
-              {actionType === 'accept' 
-                ? 'The user will be notified that you\'ve accepted their inquiry.'
-                : 'The user will be notified that you\'ve declined their inquiry.'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Response Message (optional)</Label>
-              <Textarea
-                placeholder={actionType === 'accept' 
-                  ? "Great! I'd love to work on your event. Let me share more details..."
-                  : "Thank you for your interest. Unfortunately..."
-                }
-                value={responseMessage}
-                onChange={(e) => setResponseMessage(e.target.value)}
-                rows={4}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setSelectedInquiry(null);
-              setActionType(null);
-              setResponseMessage("");
-            }}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={confirmAction} 
-              disabled={updateInquiryMutation.isPending}
-              variant={actionType === 'reject' ? 'destructive' : 'default'}
-            >
-              {updateInquiryMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : actionType === 'accept' ? (
-                "Accept Inquiry"
-              ) : (
-                "Reject Inquiry"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <InquiryActionDialog
+        inquiry={selectedInquiry}
+        actionType={actionType}
+        responseMessage={responseMessage}
+        onResponseChange={setResponseMessage}
+        onConfirm={confirmAction}
+        onClose={handleCloseDialog}
+        isSubmitting={updateInquiryMutation.isPending}
+      />
     </div>
   );
 };
