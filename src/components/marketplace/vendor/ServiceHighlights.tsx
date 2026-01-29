@@ -1,12 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { 
   Star, 
   TrendingUp, 
   Sparkles,
-  IndianRupee,
-  Check
+  IndianRupee
 } from "lucide-react";
 import { formatPriceRange } from "@/lib/constants";
 import type { VendorService } from "@/types/marketplace";
@@ -18,15 +15,13 @@ interface ServiceHighlightsProps {
 }
 
 /**
- * Service-Level Highlights
+ * Service-Level Highlights - Compact horizontal layout
  * Allows vendors to mark services as "Most Popular" or "Best Value"
- * This is UI-only - purely for vendor's self-organization
  */
 export const ServiceHighlights = ({
   services,
   onHighlightChange,
 }: ServiceHighlightsProps) => {
-  // Local state for highlights (in real implementation, this would be persisted)
   const [highlights, setHighlights] = useState<Record<string, 'popular' | 'value' | null>>({});
 
   const handleToggleHighlight = (serviceId: string, type: 'popular' | 'value') => {
@@ -43,30 +38,25 @@ export const ServiceHighlights = ({
 
   if (services.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6 text-center">
-          <Sparkles className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-          <p className="text-sm text-muted-foreground">
-            Add services to highlight your best offerings
-          </p>
-        </CardContent>
-      </Card>
+      <div className="p-4 rounded-xl border bg-card text-center">
+        <Sparkles className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+        <p className="text-sm text-muted-foreground">
+          Add services to highlight your best offerings
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-muted-foreground" />
-          Service Highlights
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-xs text-muted-foreground mb-4">
-          Mark your top services to help you track your best offerings.
-        </p>
+    <div className="p-4 rounded-xl border bg-card">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3">
+        <Sparkles className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium">Service Highlights</span>
+      </div>
 
+      {/* Services list */}
+      <div className="space-y-2">
         {services.map((service) => {
           const highlight = highlights[service.id];
           const serviceName = service.services?.name || service.name;
@@ -74,73 +64,57 @@ export const ServiceHighlights = ({
           return (
             <div 
               key={service.id} 
-              className="p-3 rounded-lg border bg-card space-y-2"
+              className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-sm">{serviceName}</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <IndianRupee className="h-3 w-3" />
-                    {formatPriceRange(service.price_min, service.price_max)}
-                  </p>
-                </div>
-                
-                {highlight && (
-                  <Badge 
-                    variant="secondary"
-                    className={
-                      highlight === 'popular' 
-                        ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400' 
-                        : 'bg-green-500/20 text-green-700 dark:text-green-400'
-                    }
-                  >
-                    {highlight === 'popular' ? (
-                      <>
-                        <Star className="h-3 w-3 mr-1" />
-                        Most Popular
-                      </>
-                    ) : (
-                      <>
-                        <TrendingUp className="h-3 w-3 mr-1" />
-                        Best Value
-                      </>
-                    )}
-                  </Badge>
-                )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{serviceName}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-0.5">
+                  <IndianRupee className="h-3 w-3" />
+                  {formatPriceRange(service.price_min, service.price_max)}
+                </p>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={highlight === 'popular' ? 'default' : 'outline'}
-                  className="h-7 text-xs"
+              <div className="flex items-center gap-1 ml-2">
+                <button
                   onClick={() => handleToggleHighlight(service.id, 'popular')}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    highlight === 'popular'
+                      ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+                  title="Mark as Most Popular"
                 >
-                  {highlight === 'popular' ? (
-                    <Check className="h-3 w-3 mr-1" />
-                  ) : (
-                    <Star className="h-3 w-3 mr-1" />
-                  )}
-                  Most Popular
-                </Button>
-                <Button
-                  size="sm"
-                  variant={highlight === 'value' ? 'default' : 'outline'}
-                  className="h-7 text-xs"
+                  <Star className="h-4 w-4" fill={highlight === 'popular' ? 'currentColor' : 'none'} />
+                </button>
+                <button
                   onClick={() => handleToggleHighlight(service.id, 'value')}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    highlight === 'value'
+                      ? 'bg-green-500/20 text-green-600 dark:text-green-400'
+                      : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+                  title="Mark as Best Value"
                 >
-                  {highlight === 'value' ? (
-                    <Check className="h-3 w-3 mr-1" />
-                  ) : (
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                  )}
-                  Best Value
-                </Button>
+                  <TrendingUp className="h-4 w-4" />
+                </button>
               </div>
+
+              {highlight && (
+                <Badge 
+                  variant="secondary"
+                  className={`ml-2 text-[10px] px-1.5 py-0 ${
+                    highlight === 'popular' 
+                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400' 
+                      : 'bg-green-500/15 text-green-700 dark:text-green-400'
+                  }`}
+                >
+                  {highlight === 'popular' ? 'Popular' : 'Value'}
+                </Badge>
+              )}
             </div>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
