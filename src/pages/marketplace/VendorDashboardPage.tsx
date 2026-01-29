@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { INQUIRY_STATUS } from "@/lib/constants";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, LogOut, RefreshCw, LayoutDashboard, Settings, HelpCircle } from "lucide-react";
+import { Loader2, LogOut, RefreshCw, LayoutDashboard, HelpCircle, User, Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { VendorInquiryWithRelations, VendorService } from "@/types/marketplace";
 
@@ -20,11 +20,18 @@ import { VendorInquiryList } from "@/components/marketplace/vendor/VendorInquiry
 import { InquiryActionDialog } from "@/components/marketplace/vendor/InquiryActionDialog";
 import { InquiryDetailView } from "@/components/marketplace/vendor/InquiryDetailView";
 import { VendorHealthIndicator } from "@/components/marketplace/vendor/VendorHealthIndicator";
-import { SeasonalReadinessToggle } from "@/components/marketplace/vendor/SeasonalReadinessToggle";
 import { VendorHelpSection } from "@/components/marketplace/vendor/VendorHelpSection";
 import { ServiceHighlights } from "@/components/marketplace/vendor/ServiceHighlights";
-import { MediaGuidance } from "@/components/marketplace/vendor/MediaGuidance";
 import { ProfilePreviewMode } from "@/components/marketplace/vendor/ProfilePreviewMode";
+
+// Import profile management components
+import {
+  VendorProfileEditForm,
+  VendorServicesManager,
+  VendorPortfolioManager,
+  VendorAvailabilityManager,
+  VendorAccountSettings,
+} from "@/components/marketplace/vendor/profile";
 
 const VendorDashboardPage = () => {
   const navigate = useNavigate();
@@ -269,9 +276,13 @@ const VendorDashboardPage = () => {
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
               </TabsTrigger>
+              <TabsTrigger value="profile" className="gap-2">
+                <User className="h-4 w-4" />
+                Profile
+              </TabsTrigger>
               <TabsTrigger value="settings" className="gap-2">
-                <Settings className="h-4 w-4" />
-                Settings
+                <Shield className="h-4 w-4" />
+                Account
               </TabsTrigger>
               <TabsTrigger value="help" className="gap-2">
                 <HelpCircle className="h-4 w-4" />
@@ -319,7 +330,8 @@ const VendorDashboardPage = () => {
                 {vendorData && vendorServices && (
                   <ProfileCompletionCard 
                     vendor={vendorData} 
-                    vendorServices={vendorServices} 
+                    vendorServices={vendorServices}
+                    onEditProfile={() => setActiveTab("profile")}
                   />
                 )}
                 
@@ -356,15 +368,34 @@ const VendorDashboardPage = () => {
             </div>
           </TabsContent>
 
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Seasonal Readiness */}
-              <SeasonalReadinessToggle />
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-6">
+            {vendorData && (
+              <>
+                <VendorProfileEditForm 
+                  vendor={vendorData} 
+                  onUpdate={() => refetchVendor()} 
+                />
+                <VendorServicesManager 
+                  vendorId={vendorData.id} 
+                  services={vendorServices || []} 
+                  onUpdate={() => {
+                    refetchVendor();
+                    queryClient.invalidateQueries({ queryKey: ['vendor-services'] });
+                  }} 
+                />
+                <VendorPortfolioManager vendorId={vendorData.id} />
+                <VendorAvailabilityManager 
+                  vendor={vendorData} 
+                  onUpdate={() => refetchVendor()} 
+                />
+              </>
+            )}
+          </TabsContent>
 
-              {/* Media Guidance */}
-              <MediaGuidance />
-            </div>
+          {/* Account Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <VendorAccountSettings onSignOut={handleSignOut} />
           </TabsContent>
 
           {/* Help Tab */}
