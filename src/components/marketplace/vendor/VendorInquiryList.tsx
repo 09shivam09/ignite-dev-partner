@@ -10,7 +10,9 @@ import {
   Sparkles,
   Clock,
   IndianRupee,
-  PartyPopper
+  PartyPopper,
+  Zap,
+  Eye
 } from "lucide-react";
 import { 
   getCityLabel, 
@@ -25,7 +27,21 @@ interface VendorInquiryListProps {
   inquiries: VendorInquiryWithRelations[];
   onAccept: (inquiry: VendorInquiryWithRelations) => void;
   onReject: (inquiry: VendorInquiryWithRelations) => void;
+  onViewDetails?: (inquiry: VendorInquiryWithRelations) => void;
 }
+
+/**
+ * Determines inquiry intent quality based on data completeness
+ * HIGH INTENT: Budget, and date both provided
+ * MEDIUM INTENT: At least one of budget or date provided
+ */
+const getInquiryIntent = (inquiry: VendorInquiryWithRelations): 'high' | 'medium' => {
+  const hasBudget = (inquiry.events?.budget_min ?? 0) > 0 || (inquiry.events?.budget_max ?? 0) > 0;
+  const hasDate = !!inquiry.events?.event_date;
+  
+  if (hasBudget && hasDate) return 'high';
+  return 'medium';
+};
 
 // Helper to determine if an inquiry is "new" (less than 24 hours old and pending)
 const isNewInquiry = (inquiry: VendorInquiryWithRelations): boolean => {
@@ -84,7 +100,8 @@ const getStatusConfig = (inquiry: VendorInquiryWithRelations) => {
 export const VendorInquiryList = ({ 
   inquiries, 
   onAccept, 
-  onReject 
+  onReject,
+  onViewDetails,
 }: VendorInquiryListProps) => {
   // Sort inquiries: NEW first, then PENDING, then by date
   const sortedInquiries = [...inquiries].sort((a, b) => {
@@ -126,6 +143,7 @@ export const VendorInquiryList = ({
         const StatusIcon = statusConfig.icon;
         const isPending = inquiry.status === 'pending';
         const isNew = isNewInquiry(inquiry);
+        const intent = getInquiryIntent(inquiry);
 
         return (
           <Card 
@@ -142,13 +160,26 @@ export const VendorInquiryList = ({
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                 {/* Main Content */}
                 <div className="flex-1 space-y-3">
-                  {/* Header with title and status */}
+                  {/* Header with title, status, and intent */}
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold text-lg">{inquiry.events?.title}</h3>
                     <Badge className={statusConfig.className}>
                       <StatusIcon className="h-3 w-3 mr-1" />
                       {statusConfig.label}
                     </Badge>
+                    {/* Intent Badge */}
+                    {isPending && (
+                      <Badge 
+                        variant="outline"
+                        className={intent === 'high' 
+                          ? 'border-green-500/50 text-green-700 dark:text-green-400' 
+                          : 'border-amber-500/50 text-amber-700 dark:text-amber-400'
+                        }
+                      >
+                        <Zap className="h-3 w-3 mr-1" />
+                        {intent === 'high' ? 'High Intent' : 'Medium Intent'}
+                      </Badge>
+                    )}
                     <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(inquiry.created_at), { addSuffix: true })}
                     </span>
@@ -187,7 +218,7 @@ export const VendorInquiryList = ({
                     <p className="text-sm">
                       <span className="font-medium">From:</span>{' '}
                       {inquiry.profiles?.full_name || 'Client'}
-                      {inquiry.profiles?.email && (
+                      {inquiry.status === 'accepted' && inquiry.profiles?.email && (
                         <span className="text-muted-foreground ml-2">
                           ({inquiry.profiles.email})
                         </span>
@@ -202,7 +233,7 @@ export const VendorInquiryList = ({
                         <MessageSquare className="h-3 w-3" />
                         Client Message
                       </div>
-                      <p className="text-sm">{inquiry.message}</p>
+                      <p className="text-sm line-clamp-2">{inquiry.message}</p>
                     </div>
                   )}
 
@@ -214,33 +245,46 @@ export const VendorInquiryList = ({
                         : 'bg-red-500/5 border-red-500/20'
                     }`}>
                       <div className="text-xs font-medium mb-1">Your Response</div>
-                      <p className="text-sm">{inquiry.vendor_response}</p>
+                      <p className="text-sm line-clamp-2">{inquiry.vendor_response}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Action Buttons */}
-                {isPending && (
-                  <div className="flex lg:flex-col gap-2 lg:min-w-[120px]">
+                <div className="flex lg:flex-col gap-2 lg:min-w-[120px]">
+                  {onViewDetails && (
                     <Button 
                       size="sm"
-                      onClick={() => onAccept(inquiry)}
+                      variant="ghost"
+                      onClick={() => onViewDetails(inquiry)}
                       className="flex-1 lg:flex-none flex items-center justify-center gap-1"
                     >
-                      <Check className="h-4 w-4" />
-                      Accept
+                      <Eye className="h-4 w-4" />
+                      Details
                     </Button>
-                    <Button 
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onReject(inquiry)}
-                      className="flex-1 lg:flex-none flex items-center justify-center gap-1"
-                    >
-                      <X className="h-4 w-4" />
-                      Reject
-                    </Button>
-                  </div>
-                )}
+                  )}
+                  {isPending && (
+                    <>
+                      <Button 
+                        size="sm"
+                        onClick={() => onAccept(inquiry)}
+                        className="flex-1 lg:flex-none flex items-center justify-center gap-1"
+                      >
+                        <Check className="h-4 w-4" />
+                        Accept
+                      </Button>
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onReject(inquiry)}
+                        className="flex-1 lg:flex-none flex items-center justify-center gap-1"
+                      >
+                        <X className="h-4 w-4" />
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

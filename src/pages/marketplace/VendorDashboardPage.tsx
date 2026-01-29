@@ -1,12 +1,14 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { INQUIRY_STATUS } from "@/lib/constants";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, LogOut, RefreshCw } from "lucide-react";
+import { Loader2, LogOut, RefreshCw, LayoutDashboard, Settings, HelpCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { VendorInquiryWithRelations, VendorService } from "@/types/marketplace";
 
 // Import vendor dashboard components
@@ -16,6 +18,13 @@ import { AvailabilityToggle } from "@/components/marketplace/vendor/Availability
 import { VendorServicesList } from "@/components/marketplace/vendor/VendorServicesList";
 import { VendorInquiryList } from "@/components/marketplace/vendor/VendorInquiryList";
 import { InquiryActionDialog } from "@/components/marketplace/vendor/InquiryActionDialog";
+import { InquiryDetailView } from "@/components/marketplace/vendor/InquiryDetailView";
+import { VendorHealthIndicator } from "@/components/marketplace/vendor/VendorHealthIndicator";
+import { SeasonalReadinessToggle } from "@/components/marketplace/vendor/SeasonalReadinessToggle";
+import { VendorHelpSection } from "@/components/marketplace/vendor/VendorHelpSection";
+import { ServiceHighlights } from "@/components/marketplace/vendor/ServiceHighlights";
+import { MediaGuidance } from "@/components/marketplace/vendor/MediaGuidance";
+import { ProfilePreviewMode } from "@/components/marketplace/vendor/ProfilePreviewMode";
 
 const VendorDashboardPage = () => {
   const navigate = useNavigate();
@@ -26,6 +35,8 @@ const VendorDashboardPage = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<VendorInquiryWithRelations | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
   const [actionType, setActionType] = useState<'accept' | 'reject' | null>(null);
+  const [detailViewInquiry, setDetailViewInquiry] = useState<VendorInquiryWithRelations | null>(null);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   // Fetch vendor's full data (for profile completion)
   const { data: vendorData, refetch: refetchVendor } = useQuery({
@@ -159,6 +170,7 @@ const VendorDashboardPage = () => {
           : "The client has been notified",
       });
       handleCloseDialog();
+      setDetailViewInquiry(null);
     },
     onError: (error: Error) => {
       toast({
@@ -200,6 +212,10 @@ const VendorDashboardPage = () => {
     refetchVendor();
   };
 
+  const handleViewDetails = (inquiry: VendorInquiryWithRelations) => {
+    setDetailViewInquiry(inquiry);
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -231,6 +247,9 @@ const VendorDashboardPage = () => {
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
+            {vendorData && vendorServices && (
+              <ProfilePreviewMode vendor={vendorData} vendorServices={vendorServices} />
+            )}
             <span className="text-sm text-muted-foreground hidden sm:inline">
               {vendor.business_name}
             </span>
@@ -241,59 +260,115 @@ const VendorDashboardPage = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* Availability Toggle */}
-        {vendorData && (
-          <AvailabilityToggle 
-            vendor={vendorData} 
-            onUpdate={() => refetchVendor()} 
-          />
-        )}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="dashboard" className="gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Settings
+            </TabsTrigger>
+            <TabsTrigger value="help" className="gap-2">
+              <HelpCircle className="h-4 w-4" />
+              Help
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Metrics Cards */}
-        <VendorMetricsCards {...metrics} />
-
-        {/* Two Column Layout for smaller cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Completion */}
-          <div className="lg:col-span-1 space-y-6">
-            {vendorData && vendorServices && (
-              <ProfileCompletionCard 
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* Availability Toggle */}
+            {vendorData && (
+              <AvailabilityToggle 
                 vendor={vendorData} 
-                vendorServices={vendorServices} 
+                onUpdate={() => refetchVendor()} 
               />
             )}
-            
-            {/* Services List */}
-            {vendorServices && (
-              <VendorServicesList services={vendorServices} />
-            )}
-          </div>
 
-          {/* Inquiries */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Inquiries</h2>
-              {metrics.pendingCount > 0 && (
-                <span className="text-sm text-muted-foreground">
-                  {metrics.pendingCount} need{metrics.pendingCount === 1 ? 's' : ''} response
-                </span>
-              )}
-            </div>
-            
-            {inquiriesLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            {/* Metrics Cards */}
+            <VendorMetricsCards {...metrics} />
+
+            {/* Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Profile & Health */}
+              <div className="lg:col-span-1 space-y-6">
+                {vendorData && vendorServices && (
+                  <>
+                    <ProfileCompletionCard 
+                      vendor={vendorData} 
+                      vendorServices={vendorServices} 
+                    />
+                    <VendorHealthIndicator
+                      vendor={vendorData}
+                      vendorServices={vendorServices}
+                      inquiryStats={{
+                        total: metrics.totalInquiries,
+                        accepted: metrics.acceptedCount,
+                        rejected: metrics.rejectedCount,
+                        pending: metrics.pendingCount,
+                      }}
+                    />
+                  </>
+                )}
+                
+                {/* Services List */}
+                {vendorServices && (
+                  <VendorServicesList services={vendorServices} />
+                )}
               </div>
-            ) : (
-              <VendorInquiryList 
-                inquiries={inquiries || []}
-                onAccept={(inquiry) => handleAction(inquiry, 'accept')}
-                onReject={(inquiry) => handleAction(inquiry, 'reject')}
-              />
-            )}
-          </div>
-        </div>
+
+              {/* Right Column - Inquiries */}
+              <div className="lg:col-span-2">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold">Inquiries</h2>
+                  {metrics.pendingCount > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      {metrics.pendingCount} need{metrics.pendingCount === 1 ? 's' : ''} response
+                    </span>
+                  )}
+                </div>
+                
+                {inquiriesLoading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <VendorInquiryList 
+                    inquiries={inquiries || []}
+                    onAccept={(inquiry) => handleAction(inquiry, 'accept')}
+                    onReject={(inquiry) => handleAction(inquiry, 'reject')}
+                    onViewDetails={handleViewDetails}
+                  />
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Seasonal Readiness */}
+              <SeasonalReadinessToggle />
+              
+              {/* Service Highlights */}
+              {vendorServices && (
+                <ServiceHighlights services={vendorServices} />
+              )}
+
+              {/* Media Guidance */}
+              <MediaGuidance />
+            </div>
+          </TabsContent>
+
+          {/* Help Tab */}
+          <TabsContent value="help" className="space-y-6">
+            <div className="max-w-2xl">
+              <VendorHelpSection />
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Action Dialog */}
@@ -306,6 +381,23 @@ const VendorDashboardPage = () => {
         onClose={handleCloseDialog}
         isSubmitting={updateInquiryMutation.isPending}
       />
+
+      {/* Detail View Dialog */}
+      <Dialog open={!!detailViewInquiry} onOpenChange={() => setDetailViewInquiry(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Inquiry Details</DialogTitle>
+          </DialogHeader>
+          {detailViewInquiry && (
+            <InquiryDetailView
+              inquiry={detailViewInquiry}
+              onAccept={() => handleAction(detailViewInquiry, 'accept')}
+              onReject={() => handleAction(detailViewInquiry, 'reject')}
+              onClose={() => setDetailViewInquiry(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
