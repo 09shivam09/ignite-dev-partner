@@ -138,17 +138,24 @@ const VendorDiscovery = () => {
         let priceOverlaps = false;
         const matchedServices: MatchedService[] = [];
 
+        // Collect all matching services — budget check is done on aggregate, not per-service,
+        // because event budget is the TOTAL budget, not per-service budget.
         for (const vs of matchingServices) {
           const priceMin = vs.price_min || vs.base_price || 0;
           const priceMax = vs.price_max || vs.base_price || 0;
           const normalizedMin = Math.min(priceMin, priceMax);
           const normalizedMax = Math.max(priceMin, priceMax);
-          if (normalizedMin <= (event.budget_max || Infinity) && normalizedMax >= (event.budget_min || 0)) {
-            priceOverlaps = true;
-            matchedServices.push({ name: vs.name, price_min: normalizedMin, price_max: normalizedMax });
-          }
+          matchedServices.push({ name: vs.name, price_min: normalizedMin, price_max: normalizedMax });
         }
-        if (!priceOverlaps) continue;
+        if (matchedServices.length === 0) continue;
+
+        // Aggregate vendor total price range across matched services
+        const aggregateMin = matchedServices.reduce((sum, s) => sum + s.price_min, 0);
+        const aggregateMax = matchedServices.reduce((sum, s) => sum + s.price_max, 0);
+        // A vendor is budget-compatible if their cheapest possible total is within the event max budget
+        // Individual services are typically a fraction of the total event budget, so we check
+        // that at least the minimum service price fits within the budget ceiling
+        priceOverlaps = aggregateMin <= (event.budget_max || Infinity);
 
         const vendorMinPrice = Math.min(...matchedServices.map(s => s.price_min));
         const vendorMaxPrice = Math.max(...matchedServices.map(s => s.price_max));
