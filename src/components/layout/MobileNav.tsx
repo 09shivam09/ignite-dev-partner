@@ -4,12 +4,14 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Home, Calendar, Search, Heart, MessageSquare, LogOut, LayoutDashboard } from "lucide-react";
+import { Home, Calendar, Search, Heart, MessageSquare, LogOut, LayoutDashboard, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
 export const MobileNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const isVendor = profile?.user_type === "vendor";
 
   const handleSignOut = async () => {
@@ -47,6 +49,9 @@ export const MobileNav = () => {
             <item.icon className="h-4 w-4" />
           </Button>
         ))}
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleSignOut}>
           <LogOut className="h-4 w-4" />
         </Button>
