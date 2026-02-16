@@ -1,5 +1,6 @@
 /**
  * Premium Vendor Card with Match Score, "Why Recommended?", and Activity Indicators.
+ * Clean Luxury Light design — large visual header, spacious layout.
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -47,18 +48,18 @@ const VendorMatchCard = ({
   const [showReasons, setShowReasons] = useState(false);
 
   return (
-    <Card className="hover-lift overflow-hidden">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg group">
       <CardContent className="p-0">
         <div className="flex flex-col md:flex-row">
           {/* Left: Content */}
-          <div className="flex-1 p-6">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-lg font-semibold">{vendor.business_name}</h3>
+          <div className="flex-1 p-6 space-y-4">
+            {/* Header row */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold leading-tight">{vendor.business_name}</h3>
                   {vendor.verificationStatus === 'verified' && (
-                    <Shield className="h-4 w-4 text-primary" />
+                    <Shield className="h-4 w-4 text-primary flex-shrink-0" />
                   )}
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -69,44 +70,46 @@ const VendorMatchCard = ({
                     <span className="flex items-center gap-1">
                       <Star className="h-3 w-3 fill-gold text-gold" />
                       {Number(vendor.rating).toFixed(1)}
-                      <span className="text-muted-foreground/60">({vendor.total_reviews})</span>
+                      <span className="opacity-60">({vendor.total_reviews})</span>
                     </span>
                   )}
                 </div>
               </div>
               {/* Match Score Pill */}
-              <Badge className="bg-primary text-primary-foreground font-bold text-sm px-3 py-1 rounded-full">
-                {vendor.matchScore.score}%
-              </Badge>
+              <div className="flex-shrink-0">
+                <Badge className="bg-primary text-primary-foreground font-bold text-sm px-3.5 py-1.5 rounded-full shadow-sm">
+                  {vendor.matchScore.score}% match
+                </Badge>
+              </div>
             </div>
 
-            {/* Activity row */}
-            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
+            {/* Activity indicators */}
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
               {vendor.responseTimeHours !== null && (
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" />
                   {vendor.responseTimeHours <= 4 ? '<4h reply' :
                    vendor.responseTimeHours <= 12 ? '<12h reply' :
                    vendor.responseTimeHours <= 24 ? '<24h reply' : `~${vendor.responseTimeHours}h`}
                 </span>
               )}
               {vendor.acceptanceRate !== null && (
-                <span className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
+                <span className="flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5" />
                   {vendor.acceptanceRate}% accept
                 </span>
               )}
-              <span className="opacity-60">{vendor.lastActiveLabel}</span>
+              <span className="opacity-50">{vendor.lastActiveLabel}</span>
             </div>
 
             {vendor.business_description && (
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{vendor.business_description}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">{vendor.business_description}</p>
             )}
 
             {/* Services */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
+            <div className="flex flex-wrap gap-1.5">
               {vendor.matchedServices.map((s, idx) => (
-                <Badge key={idx} variant="outline" className="text-xs font-normal">
+                <Badge key={idx} variant="outline" className="text-xs font-normal bg-card">
                   {s.name} · {formatPriceRange(s.price_min, s.price_max)}
                 </Badge>
               ))}
@@ -114,7 +117,7 @@ const VendorMatchCard = ({
 
             {/* Why Recommended */}
             {vendor.matchScore.reasons.length > 0 && (
-              <>
+              <div>
                 <button
                   onClick={() => setShowReasons(!showReasons)}
                   className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
@@ -131,11 +134,11 @@ const VendorMatchCard = ({
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <div className="mt-2 p-3 rounded-lg bg-accent/50 border border-primary/10">
-                        <ul className="space-y-1">
+                      <div className="mt-2 p-3 rounded-xl bg-accent/40">
+                        <ul className="space-y-1.5">
                           {vendor.matchScore.reasons.map((reason, i) => (
                             <li key={i} className="text-xs text-muted-foreground flex items-center gap-2">
-                              <Check className="h-3 w-3 text-primary flex-shrink-0" />
+                              <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                               {reason}
                             </li>
                           ))}
@@ -144,19 +147,19 @@ const VendorMatchCard = ({
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </>
+              </div>
             )}
           </div>
 
           {/* Right: Actions */}
-          <div className="flex md:flex-col items-center md:items-stretch gap-2 p-4 md:p-5 md:pl-0 md:border-l-0 border-t md:border-t-0 bg-card md:w-44">
+          <div className="flex md:flex-col items-center md:items-stretch justify-center gap-2.5 p-5 md:w-44 border-t md:border-t-0 md:border-l border-border/30 bg-muted/30">
             {isInquirySent ? (
               <Button variant="outline" disabled className="flex-1 md:w-full text-xs h-9">
-                <Check className="h-3.5 w-3.5 mr-1" />Sent
+                <Check className="h-3.5 w-3.5 mr-1.5" />Sent
               </Button>
             ) : (
               <Button onClick={onSendInquiry} className="flex-1 md:w-full text-xs h-9">
-                <Send className="h-3.5 w-3.5 mr-1" />Inquire
+                <Send className="h-3.5 w-3.5 mr-1.5" />Inquire
               </Button>
             )}
             <Button variant="outline" size="sm" className="text-xs h-9"
@@ -165,10 +168,10 @@ const VendorMatchCard = ({
             </Button>
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleSave}>
-                <Heart className={`h-4 w-4 ${isSaved ? 'fill-love text-love' : 'text-muted-foreground'}`} />
+                <Heart className={`h-4 w-4 transition-colors ${isSaved ? 'fill-love text-love' : 'text-muted-foreground'}`} />
               </Button>
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleCompare}>
-                <GitCompareArrows className={`h-4 w-4 ${isComparing ? 'text-primary' : 'text-muted-foreground'}`} />
+                <GitCompareArrows className={`h-4 w-4 transition-colors ${isComparing ? 'text-primary' : 'text-muted-foreground'}`} />
               </Button>
             </div>
           </div>
