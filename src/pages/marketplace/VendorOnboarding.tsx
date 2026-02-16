@@ -135,9 +135,9 @@ const VendorOnboarding = () => {
         description: "Your vendor profile has been created. Please log in again to access your dashboard.",
       });
 
-      // Sign out and redirect to login so auth context picks up the new vendor profile cleanly
+      // Sign out and hard-redirect so auth context resets cleanly
       await supabase.auth.signOut();
-      navigate("/marketplace/auth");
+      window.location.href = "/marketplace/auth";
     } catch (error: any) {
       toast({
         title: "Error",
