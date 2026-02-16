@@ -20,6 +20,7 @@ const MarketplaceVendorDashboard = lazy(() => import("./pages/marketplace/Vendor
 const MarketplaceVendorDetail = lazy(() => import("./pages/marketplace/VendorDetailPage"));
 const MarketplaceUserInquiries = lazy(() => import("./pages/marketplace/UserInquiries"));
 const MarketplaceUserEvents = lazy(() => import("./pages/marketplace/UserEvents"));
+const MarketplaceUserSavedVendors = lazy(() => import("./pages/marketplace/UserSavedVendors"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const LoadingFallback = () => (
@@ -45,10 +46,8 @@ const App = () => (
             <BrowserRouter>
               <Suspense fallback={<LoadingFallback />}>
                 <Routes>
-                  {/* Redirect root to marketplace auth */}
                   <Route path="/" element={<Navigate to="/marketplace/auth" replace />} />
                   
-                  {/* Event Marketplace Routes */}
                   <Route path="/marketplace/auth" element={<MarketplaceAuth />} />
                   <Route path="/marketplace" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserHome /></MarketplaceProtectedRoute>} />
                   <Route path="/marketplace/events/create" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceCreateEvent /></MarketplaceProtectedRoute>} />
@@ -56,11 +55,11 @@ const App = () => (
                   <Route path="/marketplace/events/:eventId/vendors" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceVendorDiscovery /></MarketplaceProtectedRoute>} />
                   <Route path="/marketplace/inquiries" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserInquiries /></MarketplaceProtectedRoute>} />
                   <Route path="/marketplace/events" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserEvents /></MarketplaceProtectedRoute>} />
+                  <Route path="/marketplace/saved" element={<MarketplaceProtectedRoute allowedRoles={['consumer']}><MarketplaceUserSavedVendors /></MarketplaceProtectedRoute>} />
                   <Route path="/marketplace/vendor/onboarding" element={<MarketplaceProtectedRoute allowedRoles={['vendor']}><MarketplaceVendorOnboarding /></MarketplaceProtectedRoute>} />
                   <Route path="/marketplace/vendor/dashboard" element={<MarketplaceProtectedRoute allowedRoles={['vendor']}><MarketplaceVendorDashboard /></MarketplaceProtectedRoute>} />
                   <Route path="/marketplace/vendor/:vendorId" element={<MarketplaceProtectedRoute><MarketplaceVendorDetail /></MarketplaceProtectedRoute>} />
                   
-                  {/* Catch-all route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

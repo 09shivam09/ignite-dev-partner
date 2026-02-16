@@ -16,6 +16,9 @@ export interface Vendor {
   rating: number | null;
   total_reviews: number | null;
   is_active: boolean;
+  supported_event_types: string[];
+  response_time_hours: number | null;
+  verification_status: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -89,3 +89,57 @@ export const capitalizeFirst = (str: string): string => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
+
+// ============================================
+// MULTI-EVENT MARKETPLACE CONSTANTS
+// ============================================
+
+/**
+ * Suggested services per event type.
+ * Used for dynamic service suggestions during event creation.
+ */
+export const EVENT_SERVICE_SUGGESTIONS: Record<string, string[]> = {
+  wedding: ['Catering', 'Decor', 'Photography', 'DJ', 'Makeup', 'Venue'],
+  birthday: ['Catering', 'Decor', 'DJ', 'Photography'],
+  corporate: ['Catering', 'Sound', 'Venue', 'Decor'],
+  'kitty-party': ['Decor', 'Catering'],
+  engagement: ['Decor', 'Photography', 'Catering'],
+  'baby-shower': ['Decor', 'Catering', 'Photography'],
+};
+
+/**
+ * Budget guidance ranges per event type per city (in INR).
+ * Gives contextual helper text to users during event creation.
+ */
+export const BUDGET_GUIDANCE: Record<string, { min: number; max: number; label: string }> = {
+  wedding: { min: 200000, max: 2500000, label: 'Most weddings in this area range between ₹2,00,000 – ₹25,00,000' },
+  birthday: { min: 15000, max: 200000, label: 'Most birthday parties range between ₹15,000 – ₹2,00,000' },
+  corporate: { min: 50000, max: 500000, label: 'Most corporate events range between ₹50,000 – ₹5,00,000' },
+  'kitty-party': { min: 10000, max: 100000, label: 'Most kitty parties range between ₹10,000 – ₹1,00,000' },
+  engagement: { min: 50000, max: 500000, label: 'Most engagements range between ₹50,000 – ₹5,00,000' },
+  'baby-shower': { min: 15000, max: 150000, label: 'Most baby showers range between ₹15,000 – ₹1,50,000' },
+};
+
+/**
+ * Event checklist: commonly required services per event type
+ */
+export const EVENT_CHECKLIST: Record<string, string[]> = {
+  wedding: ['Venue', 'Catering', 'Photography', 'Decor', 'DJ/Music', 'Makeup', 'Invitations'],
+  birthday: ['Venue/Space', 'Catering', 'Decor', 'DJ/Music', 'Photography'],
+  corporate: ['Venue', 'Catering', 'AV/Sound', 'Decor', 'Photography'],
+  'kitty-party': ['Venue', 'Catering', 'Decor', 'Games/Entertainment'],
+  engagement: ['Venue', 'Catering', 'Photography', 'Decor', 'Rings'],
+  'baby-shower': ['Venue', 'Catering', 'Decor', 'Photography', 'Games'],
+};
+
+/**
+ * Event type emoji mapping
+ */
+export const EVENT_TYPE_EMOJI: Record<string, string> = {
+  wedding: '💒',
+  birthday: '🎂',
+  corporate: '🏢',
+  'kitty-party': '🎀',
+  engagement: '💍',
+  'baby-shower': '🍼',
+};
