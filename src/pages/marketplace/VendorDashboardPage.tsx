@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -239,8 +239,7 @@ const VendorDashboardPage = () => {
   }
 
   if (!vendor) {
-    navigate('/marketplace/vendor/onboarding');
-    return null;
+    return <Navigate to="/marketplace/vendor/onboarding" replace />;
   }
 
   return (
