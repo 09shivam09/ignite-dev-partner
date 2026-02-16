@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
-import { EVENT_TYPES, getEventTypeLabel, getInquiryStatusVariant, capitalizeFirst, EVENT_TYPE_EMOJI } from "@/lib/constants";
-import { Loader2, Plus, Calendar, Search, LogOut, Heart, MessageSquare, ArrowRight } from "lucide-react";
+import { EVENT_TYPES, getEventTypeLabel, capitalizeFirst, EVENT_TYPE_EMOJI } from "@/lib/constants";
+import { Loader2, Plus, Calendar, Search, LogOut, Heart, MessageSquare, ArrowRight, ClipboardList, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Event, InquiryWithRelations } from "@/types/marketplace";
@@ -13,7 +14,6 @@ const UserHome = () => {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, signOut } = useAuth();
 
-  // Fetch user's events
   const { data: events, isLoading: eventsLoading } = useQuery({
     queryKey: ['user-events', user?.id],
     queryFn: async (): Promise<Event[]> => {
@@ -27,7 +27,6 @@ const UserHome = () => {
     enabled: !!user,
   });
 
-  // Fetch user's inquiries
   const { data: inquiries, isLoading: inquiriesLoading } = useQuery({
     queryKey: ['user-inquiries', user?.id],
     queryFn: async (): Promise<InquiryWithRelations[]> => {
@@ -44,7 +43,6 @@ const UserHome = () => {
     enabled: !!user,
   });
 
-  // Fetch saved vendors count
   const { data: savedVendors } = useQuery({
     queryKey: ['saved-vendors-summary', user?.id],
     queryFn: async () => {
@@ -61,13 +59,17 @@ const UserHome = () => {
     enabled: !!user,
   });
 
-  // Inquiry stats
   const inquiryStats = {
     total: inquiries?.length || 0,
     pending: inquiries?.filter(i => i.status === 'pending').length || 0,
     accepted: inquiries?.filter(i => i.status === 'accepted').length || 0,
     rejected: inquiries?.filter(i => i.status === 'rejected').length || 0,
   };
+
+  // Planning progress — rough estimate based on events with inquiries
+  const planningProgress = events && events.length > 0 && inquiryStats.total > 0
+    ? Math.min(100, Math.round((inquiryStats.accepted / Math.max(1, events.length)) * 100 + (inquiryStats.total > 0 ? 20 : 0)))
+    : 0;
 
   const handleSignOut = async () => {
     await signOut();
@@ -115,8 +117,8 @@ const UserHome = () => {
             </Card>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/marketplace/vendors')}>
               <CardContent className="flex items-center gap-4 p-6">
-                <div className="p-3 rounded-full bg-accent/10">
-                  <Search className="h-6 w-6 text-accent-foreground" />
+                <div className="p-3 rounded-full bg-secondary/10">
+                  <Search className="h-6 w-6 text-secondary" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Browse Vendors</h3>
@@ -126,8 +128,8 @@ const UserHome = () => {
             </Card>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate('/marketplace/saved')}>
               <CardContent className="flex items-center gap-4 p-6">
-                <div className="p-3 rounded-full bg-destructive/10">
-                  <Heart className="h-6 w-6 text-destructive" />
+                <div className="p-3 rounded-full bg-love/10">
+                  <Heart className="h-6 w-6 text-love" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Saved Vendors</h3>
@@ -139,31 +141,43 @@ const UserHome = () => {
         </section>
 
         {/* Dashboard Overview Cards */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold">{events?.length || 0}</p>
-              <p className="text-sm text-muted-foreground">Events</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold">{inquiryStats.total}</p>
-              <p className="text-sm text-muted-foreground">Inquiries</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{inquiryStats.accepted}</p>
-              <p className="text-sm text-muted-foreground">Accepted</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold">{inquiryStats.pending}</p>
-              <p className="text-sm text-muted-foreground">Pending</p>
-            </CardContent>
-          </Card>
+        <section>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold">{events?.length || 0}</p>
+                <p className="text-sm text-muted-foreground">Events</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold">{inquiryStats.total}</p>
+                <p className="text-sm text-muted-foreground">Inquiries</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold text-primary">{inquiryStats.accepted}</p>
+                <p className="text-sm text-muted-foreground">Accepted</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 text-center">
+                <p className="text-2xl font-bold">{inquiryStats.pending}</p>
+                <p className="text-sm text-muted-foreground">Pending</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-medium">Planning</p>
+                </div>
+                <Progress value={planningProgress} className="h-2 mb-1" />
+                <p className="text-xs text-muted-foreground">{planningProgress}% progress</p>
+              </CardContent>
+            </Card>
+          </div>
         </section>
 
         {/* Event Types */}
@@ -198,7 +212,10 @@ const UserHome = () => {
               {events.slice(0, 3).map((event) => (
                 <Card key={event.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{event.title}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <span>{EVENT_TYPE_EMOJI[event.event_type || ''] || '🎉'}</span>
+                      <CardTitle className="text-lg">{event.title}</CardTitle>
+                    </div>
                     <CardDescription>{getEventTypeLabel(event.event_type || '')}</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -206,9 +223,14 @@ const UserHome = () => {
                       <Calendar className="h-4 w-4" />
                       {event.event_date ? new Date(event.event_date).toLocaleDateString() : 'Date TBD'}
                     </div>
-                    <Button variant="outline" size="sm" className="w-full" onClick={() => navigate(`/marketplace/events/${event.id}/vendors`)}>
-                      Find Vendors
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate('/marketplace/events')}>
+                        <ClipboardList className="h-4 w-4 mr-1" />Plan
+                      </Button>
+                      <Button size="sm" className="flex-1" onClick={() => navigate(`/marketplace/events/${event.id}/vendors`)}>
+                        Find Vendors
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -238,17 +260,18 @@ const UserHome = () => {
           ) : inquiries && inquiries.length > 0 ? (
             <div className="space-y-3">
               {inquiries.map((inquiry) => (
-                <Card key={inquiry.id}>
+                <Card key={inquiry.id} className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => navigate('/marketplace/inquiries')}>
                   <CardContent className="flex items-center justify-between p-4">
                     <div>
                       <p className="font-medium">{inquiry.vendors?.business_name}</p>
                       <p className="text-sm text-muted-foreground">For: {inquiry.events?.title}</p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      inquiry.status === 'accepted' ? 'bg-primary/10 text-primary' :
-                      inquiry.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
-                      'bg-muted text-muted-foreground'
-                    }`}>{capitalizeFirst(inquiry.status)}</span>
+                    <Badge
+                      variant={inquiry.status === 'accepted' ? 'default' : inquiry.status === 'rejected' ? 'destructive' : 'secondary'}
+                    >
+                      {capitalizeFirst(inquiry.status)}
+                    </Badge>
                   </CardContent>
                 </Card>
               ))}
@@ -278,7 +301,7 @@ const UserHome = () => {
                   onClick={() => navigate(`/marketplace/vendor/${sv.vendor_id}`)}>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2">
-                      <Heart className="h-4 w-4 fill-red-500 text-red-500" />
+                      <Heart className="h-4 w-4 fill-current text-love" />
                       <span className="font-medium">{sv.vendors?.business_name}</span>
                     </div>
                     {sv.vendors?.city && (

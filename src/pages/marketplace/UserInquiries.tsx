@@ -8,8 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ArrowLeft, MessageSquare, Filter, ChevronLeft, ChevronRight } from "lucide-react";
-import { UserInquiryCard } from "@/components/marketplace/InquiryCard";
-import { EVENT_TYPES, capitalizeFirst } from "@/lib/constants";
+import InquiryTimeline from "@/components/marketplace/user/InquiryTimeline";
+import { EVENT_TYPES } from "@/lib/constants";
 import type { InquiryWithRelations } from "@/types/marketplace";
 
 const ITEMS_PER_PAGE = 10;
@@ -47,7 +47,6 @@ const UserInquiries = () => {
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  // Stats
   const stats = useMemo(() => ({
     total: inquiries?.length || 0,
     pending: inquiries?.filter(i => i.status === 'pending').length || 0,
@@ -120,7 +119,7 @@ const UserInquiries = () => {
         {paginated.length > 0 ? (
           <div className="space-y-4">
             {paginated.map((inquiry) => (
-              <UserInquiryCard key={inquiry.id} inquiry={inquiry} />
+              <InquiryTimeline key={inquiry.id} inquiry={inquiry} />
             ))}
           </div>
         ) : (

@@ -9,15 +9,19 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { getCityLabel, formatPriceRange, getEventTypeLabel } from "@/lib/constants";
+import { calculateMatchScore } from "@/lib/budget-intelligence";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Loader2, ArrowLeft, MapPin, Star, Send, Check, Search, 
-  Heart, Filter, ArrowUpDown, GitCompareArrows, X, ChevronLeft, ChevronRight
+  Heart, Filter, ArrowUpDown, GitCompareArrows, X, ChevronLeft, ChevronRight,
+  Clock, Zap, Shield
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import VendorMatchCard from "@/components/marketplace/user/VendorMatchCard";
+import type { VendorCardData } from "@/components/marketplace/user/VendorMatchCard";
 import type { MatchedVendor, MatchedService, Event, VendorService } from "@/types/marketplace";
 
 const VENDORS_PER_PAGE = 10;
@@ -29,7 +33,7 @@ const VendorDiscovery = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const [selectedVendor, setSelectedVendor] = useState<MatchedVendor | null>(null);
+  const [selectedVendor, setSelectedVendor] = useState<VendorCardData | null>(null);
   const [inquiryMessage, setInquiryMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sentInquiries, setSentInquiries] = useState<Set<string>>(new Set());
@@ -40,7 +44,6 @@ const VendorDiscovery = () => {
   const [showCompare, setShowCompare] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ALL hooks must be before any conditional returns
   const { data: event, isLoading: eventLoading, error: eventError } = useQuery({
     queryKey: ['event', eventId],
     queryFn: async () => {
@@ -101,16 +104,17 @@ const VendorDiscovery = () => {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['saved-vendors'] }); },
   });
 
-  const { data: matchedVendors, isLoading: vendorsLoading } = useQuery({
-    queryKey: ['matched-vendors', eventId, event?.city, event?.budget_min, event?.budget_max, event?.event_type, eventServices],
-    queryFn: async (): Promise<MatchedVendor[]> => {
+  // Fetch vendors with extended data for match scoring
+  const { data: vendorCards, isLoading: vendorsLoading } = useQuery({
+    queryKey: ['matched-vendors-scored', eventId, event?.city, event?.budget_min, event?.budget_max, event?.event_type, eventServices],
+    queryFn: async (): Promise<VendorCardData[]> => {
       if (!event || !eventServices || eventServices.length === 0) return [];
       const requiredServiceIds = eventServices.map((es) => es.service_id);
 
       const { data: vendors, error: vendorsError } = await supabase
         .from('vendors')
         .select(`id, business_name, business_description, city, rating, total_reviews,
-          supported_event_types, response_time_hours, verification_status,
+          supported_event_types, response_time_hours, verification_status, updated_at,
           vendor_services (id, name, service_id, price_min, price_max, base_price, is_available)`)
         .eq('city', event.city)
         .eq('is_active', true);
@@ -118,12 +122,11 @@ const VendorDiscovery = () => {
       if (vendorsError) throw vendorsError;
       if (!vendors) return [];
 
-      const matched: MatchedVendor[] = [];
+      const cards: VendorCardData[] = [];
       for (const vendor of vendors) {
         const vendorEventTypes = (vendor as any).supported_event_types as string[] | null;
-        if (event.event_type && vendorEventTypes && vendorEventTypes.length > 0) {
-          if (!vendorEventTypes.includes(event.event_type)) continue;
-        }
+        const eventTypeMatch = !event.event_type || !vendorEventTypes || vendorEventTypes.length === 0 || vendorEventTypes.includes(event.event_type);
+        if (event.event_type && vendorEventTypes && vendorEventTypes.length > 0 && !vendorEventTypes.includes(event.event_type)) continue;
 
         const vendorSvcs = vendor.vendor_services as VendorService[] | null;
         const vendorServiceIds = vendorSvcs?.filter((vs) => vs.is_available && vs.service_id).map((vs) => vs.service_id) || [];
@@ -146,47 +149,87 @@ const VendorDiscovery = () => {
         }
         if (!priceOverlaps) continue;
 
-        matched.push({
-          id: vendor.id, business_name: vendor.business_name,
-          business_description: vendor.business_description, city: vendor.city || '',
-          rating: vendor.rating, total_reviews: vendor.total_reviews, matchedServices,
+        // Calculate budget overlap percentage
+        const vendorMinPrice = Math.min(...matchedServices.map(s => s.price_min));
+        const vendorMaxPrice = Math.max(...matchedServices.map(s => s.price_max));
+        const overlapStart = Math.max(vendorMinPrice, event.budget_min || 0);
+        const overlapEnd = Math.min(vendorMaxPrice, event.budget_max || Infinity);
+        const overlapRange = Math.max(0, overlapEnd - overlapStart);
+        const totalRange = (event.budget_max || 0) - (event.budget_min || 0);
+        const budgetOverlapPercent = totalRange > 0 ? Math.min(100, (overlapRange / totalRange) * 100) : 80;
+
+        const serviceMatchPercent = (matchedServices.length / requiredServiceIds.length) * 100;
+
+        const matchScore = calculateMatchScore({
+          eventTypeMatch,
+          budgetOverlapPercent,
+          serviceMatchPercent,
+          responseTimeHours: vendor.response_time_hours,
+          isAvailable: true,
+        });
+
+        // Last active label
+        const lastActive = vendor.updated_at ? new Date(vendor.updated_at) : null;
+        let lastActiveLabel = 'Recently active';
+        if (lastActive) {
+          const diffDays = Math.floor((Date.now() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays === 0) lastActiveLabel = 'Active today';
+          else if (diffDays <= 3) lastActiveLabel = `Active ${diffDays}d ago`;
+          else if (diffDays <= 7) lastActiveLabel = 'Active this week';
+          else lastActiveLabel = `Active ${diffDays}d ago`;
+        }
+
+        cards.push({
+          id: vendor.id,
+          business_name: vendor.business_name,
+          business_description: vendor.business_description,
+          city: vendor.city || '',
+          rating: vendor.rating,
+          total_reviews: vendor.total_reviews,
+          matchedServices,
+          matchScore,
+          responseTimeHours: vendor.response_time_hours,
+          verificationStatus: vendor.verification_status,
+          lastActiveLabel,
+          acceptanceRate: null, // would need aggregate query — null is safe fallback
         });
       }
-      return matched;
+      return cards;
     },
     enabled: !!event && !!eventServices && eventServices.length > 0,
   });
 
   const filteredAndSorted = useMemo(() => {
-    if (!matchedVendors) return [];
-    let result = [...matchedVendors];
+    if (!vendorCards) return [];
+    let result = [...vendorCards];
     if (filterService !== 'all') {
       result = result.filter(v => v.matchedServices.some(s => s.name.toLowerCase().includes(filterService.toLowerCase())));
     }
     switch (sortBy) {
+      case 'match': result.sort((a, b) => b.matchScore.score - a.matchScore.score); break;
       case 'rating': result.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
       case 'price-low': result.sort((a, b) => Math.min(...a.matchedServices.map(s => s.price_min)) - Math.min(...b.matchedServices.map(s => s.price_min))); break;
       case 'price-high': result.sort((a, b) => Math.max(...b.matchedServices.map(s => s.price_max)) - Math.max(...a.matchedServices.map(s => s.price_max))); break;
       case 'services': result.sort((a, b) => b.matchedServices.length - a.matchedServices.length); break;
-      default: result.sort((a, b) => { const d = b.matchedServices.length - a.matchedServices.length; return d !== 0 ? d : (b.rating || 0) - (a.rating || 0); });
+      default: result.sort((a, b) => b.matchScore.score - a.matchScore.score);
     }
     return result;
-  }, [matchedVendors, filterService, sortBy]);
+  }, [vendorCards, filterService, sortBy]);
 
   const totalPages = Math.ceil(filteredAndSorted.length / VENDORS_PER_PAGE);
   const paginatedVendors = filteredAndSorted.slice((currentPage - 1) * VENDORS_PER_PAGE, currentPage * VENDORS_PER_PAGE);
 
   const serviceNames = useMemo(() => {
-    if (!matchedVendors) return [];
+    if (!vendorCards) return [];
     const names = new Set<string>();
-    matchedVendors.forEach(v => v.matchedServices.forEach(s => names.add(s.name)));
+    vendorCards.forEach(v => v.matchedServices.forEach(s => names.add(s.name)));
     return Array.from(names);
-  }, [matchedVendors]);
+  }, [vendorCards]);
 
   const compareVendors = useMemo(() => {
-    if (!matchedVendors) return [];
-    return matchedVendors.filter(v => compareIds.has(v.id));
-  }, [matchedVendors, compareIds]);
+    if (!vendorCards) return [];
+    return vendorCards.filter(v => compareIds.has(v.id));
+  }, [vendorCards, compareIds]);
 
   const toggleCompare = (vendorId: string) => {
     setCompareIds(prev => {
@@ -217,7 +260,6 @@ const VendorDiscovery = () => {
 
   const isInquirySent = (vendorId: string) => sentInquiries.has(vendorId) || existingInquiries?.includes(vendorId);
 
-  // Now safe to do conditional returns
   if (!eventId) {
     return (
       <div className="min-h-screen bg-background py-8 px-4">
@@ -279,7 +321,7 @@ const VendorDiscovery = () => {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {eventServices?.map((es) => (
-                <Badge key={es.service_id} variant="secondary">{es.services?.name}</Badge>
+                <Badge key={es.service_id} variant="secondary">{(es as any).services?.name}</Badge>
               ))}
             </div>
           </CardContent>
@@ -332,58 +374,16 @@ const VendorDiscovery = () => {
         {paginatedVendors.length > 0 ? (
           <div className="space-y-4">
             {paginatedVendors.map((vendor) => (
-              <Card key={vendor.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold">{vendor.business_name}</h3>
-                        {vendor.rating && vendor.rating > 0 && (
-                          <div className="flex items-center gap-1 text-sm">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span>{Number(vendor.rating).toFixed(1)}</span>
-                            <span className="text-muted-foreground">({vendor.total_reviews})</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-                        <MapPin className="h-4 w-4" />{getCityLabel(vendor.city)}
-                      </div>
-                      {vendor.business_description && (
-                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{vendor.business_description}</p>
-                      )}
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Services & Pricing:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {vendor.matchedServices.map((s, idx) => (
-                            <Badge key={idx} variant="outline">
-                              {s.name} <span className="text-muted-foreground ml-1">{formatPriceRange(s.price_min, s.price_max)}</span>
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {isInquirySent(vendor.id) ? (
-                        <Button variant="outline" disabled><Check className="h-4 w-4 mr-1" />Inquiry Sent</Button>
-                      ) : (
-                        <Button onClick={() => setSelectedVendor(vendor)}><Send className="h-4 w-4 mr-1" />Send Inquiry</Button>
-                      )}
-                      <Button variant="outline" onClick={() => navigate(`/marketplace/vendor/${vendor.id}`)}>View Profile</Button>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => saveMutation.mutate(vendor.id)}
-                          className={savedVendorIds?.includes(vendor.id) ? 'text-destructive' : 'text-muted-foreground'}>
-                          <Heart className={`h-4 w-4 ${savedVendorIds?.includes(vendor.id) ? 'fill-current' : ''}`} />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => toggleCompare(vendor.id)}
-                          className={compareIds.has(vendor.id) ? 'text-primary' : 'text-muted-foreground'}>
-                          <GitCompareArrows className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <VendorMatchCard
+                key={vendor.id}
+                vendor={vendor}
+                isInquirySent={isInquirySent(vendor.id) || false}
+                isSaved={savedVendorIds?.includes(vendor.id) || false}
+                isComparing={compareIds.has(vendor.id)}
+                onSendInquiry={() => setSelectedVendor(vendor)}
+                onToggleSave={() => saveMutation.mutate(vendor.id)}
+                onToggleCompare={() => toggleCompare(vendor.id)}
+              />
             ))}
           </div>
         ) : (
@@ -408,9 +408,9 @@ const VendorDiscovery = () => {
           </div>
         )}
 
-        {/* Comparison Dialog */}
+        {/* Enhanced Comparison Dialog */}
         <Dialog open={showCompare} onOpenChange={setShowCompare}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Compare Vendors ({compareVendors.length})</DialogTitle></DialogHeader>
             {compareVendors.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -421,12 +421,32 @@ const VendorDiscovery = () => {
                         <h4 className="font-semibold text-sm">{v.business_name}</h4>
                         <Button variant="ghost" size="sm" onClick={() => toggleCompare(v.id)}><X className="h-3 w-3" /></Button>
                       </div>
+                      
+                      {/* Match Score */}
+                      <div className="text-center p-2 rounded-lg bg-primary/5">
+                        <p className="text-2xl font-bold text-primary">{v.matchScore.score}%</p>
+                        <p className="text-xs text-muted-foreground">Match Score</p>
+                      </div>
+
                       <div className="text-sm text-muted-foreground"><MapPin className="h-3 w-3 inline mr-1" />{getCityLabel(v.city)}</div>
                       {v.rating && v.rating > 0 && (
                         <div className="flex items-center gap-1 text-sm">
                           <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />{Number(v.rating).toFixed(1)} ({v.total_reviews})
                         </div>
                       )}
+
+                      {/* Activity */}
+                      <div className="space-y-1 text-xs text-muted-foreground">
+                        {v.responseTimeHours !== null && (
+                          <p className="flex items-center gap-1"><Clock className="h-3 w-3" />
+                            {v.responseTimeHours <= 4 ? '<4h response' : v.responseTimeHours <= 12 ? '<12h response' : `${v.responseTimeHours}h response`}
+                          </p>
+                        )}
+                        {v.verificationStatus === 'verified' && (
+                          <p className="flex items-center gap-1"><Shield className="h-3 w-3 text-primary" />Verified</p>
+                        )}
+                      </div>
+
                       <div className="space-y-1">
                         <p className="text-xs font-medium">Services:</p>
                         {v.matchedServices.map((s, i) => (
