@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Home, Calendar, Search, Heart, MessageSquare, LayoutDashboard,
-  User, Shield, HelpCircle, LogOut, ChevronLeft, ChevronRight
+  User, Shield, HelpCircle, LogOut, ChevronLeft, ChevronRight,
+  Sun, Moon
 } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface NavItem {
   label: string;
@@ -35,6 +37,7 @@ export const AppSidebar = () => {
   const location = useLocation();
   const { profile, signOut } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const isVendor = profile?.user_type === "vendor";
   const navItems = isVendor ? VENDOR_NAV : CONSUMER_NAV;
@@ -89,6 +92,16 @@ export const AppSidebar = () => {
 
       {/* Footer */}
       <div className="border-t border-sidebar-border p-2 space-y-1">
+        <button
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className={cn(
+            "flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all",
+            collapsed && "justify-center px-0"
+          )}
+        >
+          {theme === "dark" ? <Sun className="h-4 w-4 flex-shrink-0" /> : <Moon className="h-4 w-4 flex-shrink-0" />}
+          {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+        </button>
         <button
           onClick={handleSignOut}
           className={cn(
