@@ -142,13 +142,13 @@ function useProvideAuth(): UseAuthValue {
         setProfile(resolvedProfile);
 
         if (resolvedProfile?.user_type === 'vendor') {
-          const { data: vendorData } = await withTimeout(
-            supabase.from('vendors').select('*').eq('user_id', userId).maybeSingle(),
+        const { data: vendorData } = await withTimeout(
+            supabase.from('vendors').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(1),
             25000,
             'Vendor load'
           );
           if (!mounted) return;
-          setVendor(vendorData);
+          setVendor(vendorData?.[0] ?? null);
         } else {
           setVendor(null);
         }
