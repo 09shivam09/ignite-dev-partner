@@ -10,6 +10,7 @@ import { Plus, Calendar, Search, Heart, MessageSquare, ArrowRight, ClipboardList
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/layout/AppLayout";
+import CinematicHeader from "@/components/marketplace/user/CinematicHeader";
 import { motion } from "framer-motion";
 import type { Event, InquiryWithRelations } from "@/types/marketplace";
 
@@ -94,17 +95,27 @@ const UserHome = () => {
 
   return (
     <AppLayout>
-      <div className="p-6 md:p-8 lg:p-10 max-w-6xl mx-auto space-y-8">
-        {/* Welcome header */}
-        <motion.div {...fadeIn}>
-          <p className="section-label mb-1">Dashboard</p>
-          <h1 className="text-3xl font-bold">
+      {/* Cinematic rotating celebration header */}
+      <CinematicHeader>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <p className="text-white/70 text-xs font-medium uppercase tracking-widest mb-2">
+            Dashboard
+          </p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
             Welcome, {profile?.full_name?.split(' ')[0] || 'there'}
           </h1>
-          <p className="text-muted-foreground mt-1">Plan, discover, and manage your events</p>
+          <p className="text-white/60 mt-1 text-sm md:text-base">
+            Plan, discover, and manage your events
+          </p>
         </motion.div>
+      </CinematicHeader>
 
-        {/* Stats Overview */}
+      {/* Floating summary cards — overlap header */}
+      <div className="px-6 md:px-8 lg:px-10 max-w-6xl mx-auto -mt-10 relative z-10">
         <motion.div {...fadeIn} transition={{ delay: 0.1 }}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -113,7 +124,7 @@ const UserHome = () => {
               { label: "Accepted", value: inquiryStats.accepted, color: "text-primary" },
               { label: "Pending", value: inquiryStats.pending, color: "text-muted-foreground" },
             ].map((stat) => (
-              <Card key={stat.label} className="hover-scale">
+              <Card key={stat.label} className="hover-scale shadow-md">
                 <CardContent className="p-5 text-center">
                   <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
                   <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{stat.label}</p>
@@ -122,7 +133,9 @@ const UserHome = () => {
             ))}
           </div>
         </motion.div>
+      </div>
 
+      <div className="px-6 md:px-8 lg:px-10 max-w-6xl mx-auto space-y-8 py-8">
         {/* Planning progress */}
         {planningProgress > 0 && (
           <motion.div {...fadeIn} transition={{ delay: 0.15 }}>
