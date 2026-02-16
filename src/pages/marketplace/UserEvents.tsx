@@ -1,18 +1,19 @@
 /**
  * UserEvents page — enhanced with Event Planner Dashboard.
- * Each event card can expand into a full planning view.
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { CITIES, EVENT_TYPES, EVENT_TYPE_EMOJI } from "@/lib/constants";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ArrowLeft, Calendar, MapPin, IndianRupee, Plus, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, MapPin, IndianRupee, Plus, Search, ChevronDown, ChevronUp } from "lucide-react";
 import EventPlannerDashboard from "@/components/marketplace/user/EventPlannerDashboard";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const UserEvents = () => {
   const navigate = useNavigate();
@@ -34,7 +35,6 @@ const UserEvents = () => {
     enabled: !!user,
   });
 
-  // Fetch inquiries for expanded event
   const { data: eventInquiries } = useQuery({
     queryKey: ['event-inquiries-planner', expandedEventId, user?.id],
     queryFn: async () => {
@@ -55,21 +55,25 @@ const UserEvents = () => {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <AppLayout>
+        <div className="p-6 md:p-8 lg:p-10 max-w-5xl mx-auto space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <div className="space-y-4">
+            {[1, 2].map(i => <Skeleton key={i} className="h-40" />)}
+          </div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" className="mb-4" onClick={() => navigate('/marketplace')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />Back to Home
-        </Button>
-
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">My Events</h1>
+    <AppLayout>
+      <div className="p-6 md:p-8 lg:p-10 max-w-5xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="section-label mb-1">Events</p>
+            <h1 className="text-2xl font-bold">My Events</h1>
+          </div>
           <Button onClick={() => navigate('/marketplace/events/create')}>
             <Plus className="h-4 w-4 mr-2" />Create Event
           </Button>
@@ -80,65 +84,64 @@ const UserEvents = () => {
             {events.map((event: any) => {
               const isExpanded = expandedEventId === event.id;
               return (
-                <div key={event.id} className="space-y-0">
-                  <Card>
-                    <CardHeader className="pb-2">
+                <div key={event.id}>
+                  <Card className="hover-lift">
+                    <CardHeader className="pb-2 p-5">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           <span className="text-xl">{EVENT_TYPE_EMOJI[event.event_type] || '🎉'}</span>
                           <div>
-                            <CardTitle>{event.title}</CardTitle>
-                            <CardDescription>{getEventTypeLabel(event.event_type || '')}</CardDescription>
+                            <CardTitle className="text-base">{event.title}</CardTitle>
+                            <CardDescription className="text-xs">{getEventTypeLabel(event.event_type || '')}</CardDescription>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant={event.status === 'active' ? 'default' : 'secondary'}>{event.status}</Badge>
-                          <Button variant="ghost" size="sm" onClick={() => setExpandedEventId(isExpanded ? null : event.id)}>
+                          <Badge variant={event.status === 'active' ? 'default' : 'secondary'} className="text-xs">{event.status}</Badge>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpandedEventId(isExpanded ? null : event.id)}>
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           </Button>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-muted-foreground mb-4">
+                    <CardContent className="p-5 pt-0">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs text-muted-foreground mb-3">
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
+                          <Calendar className="h-3.5 w-3.5" />
                           {event.event_date ? new Date(event.event_date).toLocaleDateString() : 'Date TBD'}
                         </div>
                         <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4" />
+                          <MapPin className="h-3.5 w-3.5" />
                           {getCityLabel(event.city || '')}
                         </div>
                         <div className="flex items-center gap-1">
-                          <IndianRupee className="h-4 w-4" />
+                          <IndianRupee className="h-3.5 w-3.5" />
                           ₹{event.budget_min?.toLocaleString()} - ₹{event.budget_max?.toLocaleString()}
                         </div>
                       </div>
 
                       {event.event_services && event.event_services.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
+                        <div className="flex flex-wrap gap-1.5 mb-3">
                           {event.event_services.map((es: any) => (
-                            <Badge key={es.service_id} variant="outline">{es.services?.name}</Badge>
+                            <Badge key={es.service_id} variant="outline" className="text-xs">{es.services?.name}</Badge>
                           ))}
                         </div>
                       )}
 
                       {!isExpanded && (
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1" onClick={() => setExpandedEventId(event.id)}>
+                          <Button variant="outline" size="sm" className="flex-1 text-xs h-8" onClick={() => setExpandedEventId(event.id)}>
                             View Planner
                           </Button>
-                          <Button size="sm" className="flex-1" onClick={() => navigate(`/marketplace/events/${event.id}/vendors`)}>
-                            <Search className="h-4 w-4 mr-2" />Find Vendors
+                          <Button size="sm" className="flex-1 text-xs h-8" onClick={() => navigate(`/marketplace/events/${event.id}/vendors`)}>
+                            <Search className="h-3.5 w-3.5 mr-1" />Find Vendors
                           </Button>
                         </div>
                       )}
                     </CardContent>
                   </Card>
 
-                  {/* Expanded Planner Dashboard */}
                   {isExpanded && (
-                    <div className="mt-4 pl-0 md:pl-4">
+                    <div className="mt-3 ml-0 md:ml-4">
                       <EventPlannerDashboard
                         event={event}
                         eventServices={event.event_services || []}
@@ -151,10 +154,12 @@ const UserEvents = () => {
             })}
           </div>
         ) : (
-          <Card className="border-dashed">
+          <Card className="border-dashed border-border/50">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="font-semibold mb-2">No events yet</h3>
+              <div className="p-4 rounded-full bg-accent mb-4">
+                <Calendar className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="font-semibold mb-1">No events yet</h3>
               <p className="text-sm text-muted-foreground mb-4">Create your first event to start finding vendors</p>
               <Button onClick={() => navigate('/marketplace/events/create')}>
                 <Plus className="h-4 w-4 mr-2" />Create Event
@@ -163,7 +168,7 @@ const UserEvents = () => {
           </Card>
         )}
       </div>
-    </div>
+    </AppLayout>
   );
 };
 
