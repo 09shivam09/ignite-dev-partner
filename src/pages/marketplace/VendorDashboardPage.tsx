@@ -431,6 +431,7 @@ const VendorDashboardPage = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </AppLayout>
   );
 };
 
