@@ -1893,6 +1893,7 @@ export type Database = {
           search_vector: unknown
           service_radius: number | null
           service_tags: string[] | null
+          supported_event_types: string[] | null
           tagline: string | null
           team_size: number | null
           total_bookings: number | null
@@ -1930,6 +1931,7 @@ export type Database = {
           search_vector?: unknown
           service_radius?: number | null
           service_tags?: string[] | null
+          supported_event_types?: string[] | null
           tagline?: string | null
           team_size?: number | null
           total_bookings?: number | null
@@ -1967,6 +1969,7 @@ export type Database = {
           search_vector?: unknown
           service_radius?: number | null
           service_tags?: string[] | null
+          supported_event_types?: string[] | null
           tagline?: string | null
           team_size?: number | null
           total_bookings?: number | null
