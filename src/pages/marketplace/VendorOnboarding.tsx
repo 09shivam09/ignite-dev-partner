@@ -96,26 +96,40 @@ const VendorOnboarding = () => {
     setIsLoading(true);
 
     try {
-      // Create vendor profile
-      const { data: vendor, error: vendorError } = await supabase
+      // Check if vendor already exists (prevent duplicates)
+      const { data: existing } = await supabase
         .from('vendors')
-        .insert({
-          user_id: user.id,
-          business_name: formData.businessName,
-          business_description: formData.description,
-          city: formData.city,
-          business_phone: formData.phone,
-          is_active: true,
-          verification_status: 'pending',
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
 
-      if (vendorError) throw vendorError;
+      let vendorId: string;
+
+      if (existing && existing.length > 0) {
+        vendorId = existing[0].id;
+      } else {
+        // Create vendor profile
+        const { data: vendor, error: vendorError } = await supabase
+          .from('vendors')
+          .insert({
+            user_id: user.id,
+            business_name: formData.businessName,
+            business_description: formData.description,
+            city: formData.city,
+            business_phone: formData.phone,
+            is_active: true,
+            verification_status: 'pending',
+          })
+          .select()
+          .single();
+
+        if (vendorError) throw vendorError;
+        vendorId = vendor.id;
+      }
 
       // Create vendor services with pricing
       const vendorServicesData = selectedServices.map(s => ({
-        vendor_id: vendor.id,
+        vendor_id: vendorId,
         service_id: s.service_id,
         name: services?.find(svc => svc.id === s.service_id)?.name || 'Service',
         base_price: s.price_min,
