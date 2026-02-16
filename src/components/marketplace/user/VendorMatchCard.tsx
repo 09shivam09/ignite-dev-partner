@@ -1,6 +1,5 @@
 /**
- * Enhanced Vendor Card with Match Score, "Why Recommended?", and Activity Indicators.
- * Used in the VendorDiscovery page.
+ * Premium Vendor Card with Match Score, "Why Recommended?", and Activity Indicators.
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +11,7 @@ import {
   ChevronDown, ChevronUp, Clock, Zap, Shield
 } from "lucide-react";
 import { getCityLabel, formatPriceRange } from "@/lib/constants";
+import { motion, AnimatePresence } from "framer-motion";
 import type { MatchScoreResult } from "@/lib/budget-intelligence";
 
 export interface VendorCardData {
@@ -46,118 +46,129 @@ const VendorMatchCard = ({
   const navigate = useNavigate();
   const [showReasons, setShowReasons] = useState(false);
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-primary';
-    if (score >= 60) return 'text-secondary';
-    return 'text-muted-foreground';
-  };
-
   return (
-    <Card className="hover:shadow-lg transition-all">
-      <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div className="flex-1">
-            {/* Header with match score */}
-            <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold">{vendor.business_name}</h3>
-              <Badge variant="outline" className={`font-bold ${getScoreColor(vendor.matchScore.score)}`}>
-                {vendor.matchScore.score}% Match
+    <Card className="hover-lift overflow-hidden">
+      <CardContent className="p-0">
+        <div className="flex flex-col md:flex-row">
+          {/* Left: Content */}
+          <div className="flex-1 p-6">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg font-semibold">{vendor.business_name}</h3>
+                  {vendor.verificationStatus === 'verified' && (
+                    <Shield className="h-4 w-4 text-primary" />
+                  )}
+                </div>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />{getCityLabel(vendor.city)}
+                  </span>
+                  {vendor.rating && vendor.rating > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-gold text-gold" />
+                      {Number(vendor.rating).toFixed(1)}
+                      <span className="text-muted-foreground/60">({vendor.total_reviews})</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* Match Score Pill */}
+              <Badge className="bg-primary text-primary-foreground font-bold text-sm px-3 py-1 rounded-full">
+                {vendor.matchScore.score}%
               </Badge>
-              {vendor.verificationStatus === 'verified' && (
-                <Shield className="h-4 w-4 text-primary" />
-              )}
             </div>
 
-            {/* Location & Rating */}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" />{getCityLabel(vendor.city)}
-              </span>
-              {vendor.rating && vendor.rating > 0 && (
-                <span className="flex items-center gap-1">
-                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                  {Number(vendor.rating).toFixed(1)} ({vendor.total_reviews})
-                </span>
-              )}
-            </div>
-
-            {/* Activity Indicators */}
+            {/* Activity row */}
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
               {vendor.responseTimeHours !== null && (
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {vendor.responseTimeHours <= 4 ? 'Replies in <4h' :
-                   vendor.responseTimeHours <= 12 ? 'Replies in <12h' :
-                   vendor.responseTimeHours <= 24 ? 'Replies in <24h' : `~${vendor.responseTimeHours}h response`}
+                  {vendor.responseTimeHours <= 4 ? '<4h reply' :
+                   vendor.responseTimeHours <= 12 ? '<12h reply' :
+                   vendor.responseTimeHours <= 24 ? '<24h reply' : `~${vendor.responseTimeHours}h`}
                 </span>
               )}
               {vendor.acceptanceRate !== null && (
                 <span className="flex items-center gap-1">
                   <Zap className="h-3 w-3" />
-                  {vendor.acceptanceRate}% acceptance
+                  {vendor.acceptanceRate}% accept
                 </span>
               )}
-              <span className="flex items-center gap-1 opacity-70">
-                {vendor.lastActiveLabel}
-              </span>
+              <span className="opacity-60">{vendor.lastActiveLabel}</span>
             </div>
 
             {vendor.business_description && (
               <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{vendor.business_description}</p>
             )}
 
-            {/* Services & Pricing */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Services & Pricing:</p>
-              <div className="flex flex-wrap gap-2">
-                {vendor.matchedServices.map((s, idx) => (
-                  <Badge key={idx} variant="outline">
-                    {s.name} <span className="text-muted-foreground ml-1">{formatPriceRange(s.price_min, s.price_max)}</span>
-                  </Badge>
-                ))}
-              </div>
+            {/* Services */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {vendor.matchedServices.map((s, idx) => (
+                <Badge key={idx} variant="outline" className="text-xs font-normal">
+                  {s.name} · {formatPriceRange(s.price_min, s.price_max)}
+                </Badge>
+              ))}
             </div>
 
-            {/* Why Recommended? */}
+            {/* Why Recommended */}
             {vendor.matchScore.reasons.length > 0 && (
-              <button
-                onClick={() => setShowReasons(!showReasons)}
-                className="flex items-center gap-1 mt-3 text-xs text-primary hover:underline"
-              >
-                Why recommended?
-                {showReasons ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              </button>
-            )}
-            {showReasons && (
-              <div className="mt-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                <ul className="space-y-1">
-                  {vendor.matchScore.reasons.map((reason, i) => (
-                    <li key={i} className="text-xs text-muted-foreground flex items-center gap-2">
-                      <Check className="h-3 w-3 text-primary flex-shrink-0" />
-                      {reason}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <>
+                <button
+                  onClick={() => setShowReasons(!showReasons)}
+                  className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                >
+                  Why recommended?
+                  {showReasons ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </button>
+                <AnimatePresence>
+                  {showReasons && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-2 p-3 rounded-lg bg-accent/50 border border-primary/10">
+                        <ul className="space-y-1">
+                          {vendor.matchScore.reasons.map((reason, i) => (
+                            <li key={i} className="text-xs text-muted-foreground flex items-center gap-2">
+                              <Check className="h-3 w-3 text-primary flex-shrink-0" />
+                              {reason}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col gap-2">
+          {/* Right: Actions */}
+          <div className="flex md:flex-col items-center md:items-stretch gap-2 p-4 md:p-5 md:pl-0 md:border-l-0 border-t md:border-t-0 bg-card md:w-44">
             {isInquirySent ? (
-              <Button variant="outline" disabled><Check className="h-4 w-4 mr-1" />Inquiry Sent</Button>
-            ) : (
-              <Button onClick={onSendInquiry}><Send className="h-4 w-4 mr-1" />Send Inquiry</Button>
-            )}
-            <Button variant="outline" onClick={() => navigate(`/marketplace/vendor/${vendor.id}`)}>View Profile</Button>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={onToggleSave}
-                className={isSaved ? 'text-destructive' : 'text-muted-foreground'}>
-                <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+              <Button variant="outline" disabled className="flex-1 md:w-full text-xs h-9">
+                <Check className="h-3.5 w-3.5 mr-1" />Sent
               </Button>
-              <Button variant="ghost" size="sm" onClick={onToggleCompare}
-                className={isComparing ? 'text-primary' : 'text-muted-foreground'}>
-                <GitCompareArrows className="h-4 w-4" />
+            ) : (
+              <Button onClick={onSendInquiry} className="flex-1 md:w-full text-xs h-9">
+                <Send className="h-3.5 w-3.5 mr-1" />Inquire
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="text-xs h-9"
+              onClick={() => navigate(`/marketplace/vendor/${vendor.id}`)}>
+              View Profile
+            </Button>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleSave}>
+                <Heart className={`h-4 w-4 ${isSaved ? 'fill-love text-love' : 'text-muted-foreground'}`} />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggleCompare}>
+                <GitCompareArrows className={`h-4 w-4 ${isComparing ? 'text-primary' : 'text-muted-foreground'}`} />
               </Button>
             </div>
           </div>

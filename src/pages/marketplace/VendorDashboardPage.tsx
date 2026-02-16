@@ -2,13 +2,15 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { INQUIRY_STATUS } from "@/lib/constants";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, LogOut, RefreshCw, LayoutDashboard, HelpCircle, User, Shield } from "lucide-react";
+import { Loader2, RefreshCw, LayoutDashboard, HelpCircle, User, Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AppLayout } from "@/components/layout/AppLayout";
 import type { VendorInquiryWithRelations, VendorService } from "@/types/marketplace";
 
 // Import vendor dashboard components
@@ -225,9 +227,14 @@ const VendorDashboardPage = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <AppLayout>
+        <div className="p-8 space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <div className="grid grid-cols-4 gap-4">
+            {[1,2,3,4].map(i => <Skeleton key={i} className="h-20" />)}
+          </div>
+        </div>
+      </AppLayout>
     );
   }
 
@@ -237,32 +244,21 @@ const VendorDashboardPage = () => {
   }
 
   return (
+    <AppLayout>
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b bg-card sticky top-0 z-10 md:hidden">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-primary">🎉 EventConnect</h1>
-            <p className="text-sm text-muted-foreground">Vendor Dashboard</p>
+            <p className="text-sm font-semibold">Vendor Dashboard</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleRefresh}
-              className="text-muted-foreground"
-            >
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4" />
             </Button>
             {vendorData && vendorServices && (
               <ProfilePreviewMode vendor={vendorData} vendorServices={vendorServices} />
             )}
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {vendor.business_name}
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </header>
