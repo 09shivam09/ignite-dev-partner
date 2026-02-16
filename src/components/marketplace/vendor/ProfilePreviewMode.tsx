@@ -13,7 +13,7 @@ import {
   Mail
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { formatPriceRange, getCityLabel } from "@/lib/constants";
+import { formatPriceRange, getCityLabel, getEventTypeLabel } from "@/lib/constants";
 import type { Vendor, VendorService } from "@/types/marketplace";
 
 interface ProfilePreviewModeProps {
@@ -91,6 +91,20 @@ export const ProfilePreviewMode = ({
                 <p className="text-sm text-muted-foreground/50 italic">
                   No description added yet
                 </p>
+              )}
+
+              {/* Supported Event Types */}
+              {vendor.supported_event_types && vendor.supported_event_types.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Event Types</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {vendor.supported_event_types.map((type) => (
+                      <Badge key={type} variant="secondary" className="text-xs">
+                        {getEventTypeLabel(type)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
               )}
 
               {/* Services */}

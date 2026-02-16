@@ -321,7 +321,7 @@ const VendorDashboardPage = () => {
             )}
 
             {/* Metrics Cards */}
-            <VendorMetricsCards {...metrics} />
+            <VendorMetricsCards {...metrics} inquiries={inquiries} />
 
             {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

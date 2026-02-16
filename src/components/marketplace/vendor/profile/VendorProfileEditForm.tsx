@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { CITIES } from "@/lib/constants";
-import { Loader2, Save, Building2, User, Phone, MapPin, Quote } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CITIES, EVENT_TYPES } from "@/lib/constants";
+import { Loader2, Save, Building2, Phone, MapPin, Quote, PartyPopper } from "lucide-react";
 import type { Vendor } from "@/types/marketplace";
 
 interface VendorProfileEditFormProps {
@@ -39,6 +40,7 @@ export const VendorProfileEditForm = ({ vendor, onUpdate }: VendorProfileEditFor
     city: vendor.city || "",
     business_description: vendor.business_description || "",
     years_experience: (vendor as any).years_experience?.toString() || "",
+    supported_event_types: vendor.supported_event_types || [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -76,6 +78,10 @@ export const VendorProfileEditForm = ({ vendor, onUpdate }: VendorProfileEditFor
       newErrors.years_experience = "Enter a valid number of years";
     }
 
+    if (formData.supported_event_types.length === 0) {
+      newErrors.supported_event_types = "Select at least one event type you serve";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -97,6 +103,7 @@ export const VendorProfileEditForm = ({ vendor, onUpdate }: VendorProfileEditFor
           city: formData.city,
           business_description: formData.business_description.trim() || null,
           years_experience: formData.years_experience ? parseInt(formData.years_experience) : null,
+          supported_event_types: formData.supported_event_types,
           updated_at: new Date().toISOString(),
         })
         .eq('id', vendor.id);
@@ -121,9 +128,21 @@ export const VendorProfileEditForm = ({ vendor, onUpdate }: VendorProfileEditFor
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleEventTypeToggle = (eventType: string) => {
+    setFormData(prev => {
+      const current = prev.supported_event_types;
+      const updated = current.includes(eventType)
+        ? current.filter(t => t !== eventType)
+        : [...current, eventType];
+      return { ...prev, supported_event_types: updated };
+    });
+    if (errors.supported_event_types) {
+      setErrors(prev => ({ ...prev, supported_event_types: "" }));
     }
   };
 
@@ -261,6 +280,38 @@ export const VendorProfileEditForm = ({ vendor, onUpdate }: VendorProfileEditFor
                 <p className="text-xs text-destructive">{errors.years_experience}</p>
               )}
             </div>
+          </div>
+
+          {/* Supported Event Types */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <PartyPopper className="h-4 w-4 text-muted-foreground" />
+              Supported Event Types *
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Select all event types you can serve. This determines which customers can find you.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {EVENT_TYPES.map((et) => (
+                <label
+                  key={et.value}
+                  className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    formData.supported_event_types.includes(et.value)
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-muted-foreground'
+                  }`}
+                >
+                  <Checkbox
+                    checked={formData.supported_event_types.includes(et.value)}
+                    onCheckedChange={() => handleEventTypeToggle(et.value)}
+                  />
+                  <span className="text-sm font-medium">{et.label}</span>
+                </label>
+              ))}
+            </div>
+            {errors.supported_event_types && (
+              <p className="text-xs text-destructive">{errors.supported_event_types}</p>
+            )}
           </div>
 
           {/* Description */}

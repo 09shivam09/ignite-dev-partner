@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -6,9 +7,12 @@ import {
   CheckCircle2, 
   XCircle, 
   Sparkles,
-  TrendingUp 
+  TrendingUp,
+  PartyPopper,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { getEventTypeLabel } from "@/lib/constants";
+import type { VendorInquiryWithRelations } from "@/types/marketplace";
 
 interface VendorMetricsCardsProps {
   newCount: number;
@@ -17,6 +21,8 @@ interface VendorMetricsCardsProps {
   rejectedCount: number;
   totalInquiries: number;
   lastInquiryTime: string | null;
+  /** Optional: pass inquiries for event-type breakdown */
+  inquiries?: VendorInquiryWithRelations[];
 }
 
 export const VendorMetricsCards = ({
@@ -26,24 +32,37 @@ export const VendorMetricsCards = ({
   rejectedCount,
   totalInquiries,
   lastInquiryTime,
+  inquiries,
 }: VendorMetricsCardsProps) => {
+  // Event type breakdown
+  const eventBreakdown = useMemo(() => {
+    if (!inquiries || inquiries.length === 0) return [];
+    const counts: Record<string, number> = {};
+    inquiries.forEach(i => {
+      const type = i.events?.event_type || 'unknown';
+      counts[type] = (counts[type] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([type, count]) => ({ type, count, label: getEventTypeLabel(type) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 4);
+  }, [inquiries]);
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {/* New Inquiries - Most prominent */}
+      {/* New Inquiries */}
       <Card className={newCount > 0 ? "border-primary bg-primary/5" : ""}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <Sparkles className={`h-5 w-5 ${newCount > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
-            {newCount > 0 && (
-              <Badge variant="default" className="text-xs">New</Badge>
-            )}
+            {newCount > 0 && <Badge variant="default" className="text-xs">New</Badge>}
           </div>
           <div className="text-2xl font-bold">{newCount}</div>
           <p className="text-xs text-muted-foreground">New Inquiries</p>
         </CardContent>
       </Card>
 
-      {/* Pending Inquiries */}
+      {/* Pending */}
       <Card className={pendingCount > 0 ? "border-yellow-500/50 bg-yellow-500/5" : ""}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
@@ -76,8 +95,8 @@ export const VendorMetricsCards = ({
         </CardContent>
       </Card>
 
-      {/* Total Inquiries - Full width */}
-      <Card className="col-span-2 md:col-span-2">
+      {/* Total + Last Inquiry */}
+      <Card className="col-span-2">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-full bg-primary/10">
@@ -85,31 +104,39 @@ export const VendorMetricsCards = ({
             </div>
             <div>
               <div className="text-2xl font-bold">{totalInquiries}</div>
-              <p className="text-xs text-muted-foreground">Total Inquiries Received</p>
+              <p className="text-xs text-muted-foreground">Total Inquiries</p>
+            </div>
+            <div className="ml-auto text-right">
+              <p className="text-xs text-muted-foreground">Last inquiry</p>
+              <p className="text-sm font-medium">
+                {lastInquiryTime 
+                  ? formatDistanceToNow(new Date(lastInquiryTime), { addSuffix: true })
+                  : 'None yet'}
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Last Inquiry Time */}
-      <Card className="col-span-2 md:col-span-2">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-muted">
-              <MessageSquare className="h-5 w-5 text-muted-foreground" />
+      {/* Event Type Breakdown */}
+      {eventBreakdown.length > 0 && (
+        <Card className="col-span-2">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <PartyPopper className="h-4 w-4 text-muted-foreground" />
+              <p className="text-xs font-medium text-muted-foreground">By Event Type</p>
             </div>
-            <div>
-              <div className="text-sm font-medium">
-                {lastInquiryTime 
-                  ? formatDistanceToNow(new Date(lastInquiryTime), { addSuffix: true })
-                  : 'No inquiries yet'
-                }
-              </div>
-              <p className="text-xs text-muted-foreground">Last Inquiry Received</p>
+            <div className="flex flex-wrap gap-2">
+              {eventBreakdown.map(({ type, count, label }) => (
+                <Badge key={type} variant="outline" className="gap-1">
+                  {label}
+                  <span className="font-bold">{count}</span>
+                </Badge>
+              ))}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

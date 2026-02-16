@@ -4,6 +4,7 @@ import {
   AlertCircle,
   Heart
 } from "lucide-react";
+import { EVENT_TYPES } from "@/lib/constants";
 import type { Vendor, VendorService } from "@/types/marketplace";
 import {
   Tooltip,
@@ -24,18 +25,20 @@ interface VendorHealthIndicatorProps {
 }
 
 /**
- * Vendor Health Indicator - Compact inline badge
+ * Vendor Health Indicator - Enhanced visibility score
  * Derives health status based on:
- * - Profile completeness (40%)
- * - Inquiry response rate (40%)
- * - Availability status (20%)
+ * - Profile completeness (25%)
+ * - Inquiry response rate (25%)
+ * - Acceptance rate (20%)
+ * - Availability status (15%)
+ * - Event type coverage (15%)
  */
 export const VendorHealthIndicator = ({
   vendor,
   vendorServices,
   inquiryStats,
 }: VendorHealthIndicatorProps) => {
-  // Calculate profile completeness score (0-100)
+  // Profile completeness (0-100)
   const profileScore = (() => {
     let score = 0;
     if (vendor.business_description && vendor.business_description.length > 20) score += 25;
@@ -46,21 +49,33 @@ export const VendorHealthIndicator = ({
     return score;
   })();
 
-  // Calculate response rate
+  // Response rate
   const respondedCount = inquiryStats.accepted + inquiryStats.rejected;
   const needsResponseCount = respondedCount + inquiryStats.pending;
   const responseRate = needsResponseCount > 0 
     ? Math.round((respondedCount / needsResponseCount) * 100)
     : 100;
 
+  // Acceptance rate
+  const acceptanceRate = respondedCount > 0
+    ? Math.round((inquiryStats.accepted / respondedCount) * 100)
+    : 100;
+
   // Availability factor
   const isAvailable = vendor.is_active;
 
+  // Event type coverage (how many of the 6 types does vendor support)
+  const eventTypeCoverage = Math.round(
+    ((vendor.supported_event_types?.length || 0) / EVENT_TYPES.length) * 100
+  );
+
   // Calculate overall health (weighted)
   const healthScore = Math.round(
-    (profileScore * 0.4) + 
-    (responseRate * 0.4) + 
-    (isAvailable ? 20 : 0)
+    (profileScore * 0.25) + 
+    (responseRate * 0.25) + 
+    (acceptanceRate * 0.20) +
+    (isAvailable ? 15 : 0) +
+    (eventTypeCoverage * 0.15)
   );
 
   const status: 'good' | 'needs-improvement' = healthScore >= 60 ? 'good' : 'needs-improvement';
@@ -105,7 +120,9 @@ export const VendorHealthIndicator = ({
             <div className="text-xs text-muted-foreground space-y-0.5">
               <p>Profile: {profileScore}%</p>
               <p>Response: {needsResponseCount > 0 ? `${responseRate}%` : 'No data'}</p>
+              <p>Acceptance: {respondedCount > 0 ? `${acceptanceRate}%` : 'No data'}</p>
               <p>Status: {isAvailable ? 'Active' : 'Paused'}</p>
+              <p>Event types: {vendor.supported_event_types?.length || 0}/{EVENT_TYPES.length}</p>
             </div>
           </div>
         </TooltipContent>
