@@ -1,7 +1,7 @@
 /**
- * Event Planner Dashboard
- * Post-creation planning view with budget summary, checklist, inquiry progress,
- * budget health indicator, and suggested budget distribution.
+ * Event Control Dashboard — Centralized event management view.
+ * Features: Event summary, budget overview, vendor status, readiness score,
+ * smart timeline, confirmed vendors, planning checklist.
  */
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
@@ -12,13 +12,18 @@ import { Progress } from "@/components/ui/progress";
 import {
   Calendar, MapPin, IndianRupee, CheckCircle2, Circle, AlertCircle,
   ArrowRight, Lightbulb, TrendingUp, TrendingDown, Minus,
-  Search, ClipboardList
+  Search, ClipboardList, Wallet
 } from "lucide-react";
 import { getCityLabel, getEventTypeLabel, formatPriceRange, EVENT_CHECKLIST, EVENT_TYPE_EMOJI } from "@/lib/constants";
 import { getBudgetHealth, BUDGET_DISTRIBUTION, getMissingServiceNudges } from "@/lib/budget-intelligence";
+import { calculateReadinessScore } from "@/lib/readiness-score";
+import { getLifecycleCounts, getEventVendorLifecycles } from "@/lib/vendor-lifecycle";
+import ReadinessScoreCard from "./ReadinessScoreCard";
+import SmartTimeline from "./SmartTimeline";
+import ConfirmedVendorsCard from "./ConfirmedVendorsCard";
 import type { Event } from "@/types/marketplace";
 
-/** Client-side checklist item status — NOT persisted to backend */
+/** Client-side checklist item status */
 type ChecklistStatus = 'pending' | 'shortlisted' | 'booked';
 
 interface EventPlannerDashboardProps {
@@ -30,9 +35,9 @@ interface EventPlannerDashboardProps {
 const EventPlannerDashboard = ({ event, eventServices, inquiries }: EventPlannerDashboardProps) => {
   const navigate = useNavigate();
 
-  // Client-side checklist state (not persisted — intentional per spec)
   const checklistItems = useMemo(() => EVENT_CHECKLIST[event.event_type || ''] || [], [event.event_type]);
   const [checklistState, setChecklistState] = useState<Record<string, ChecklistStatus>>({});
+  const [lifecycleRefreshKey, setLifecycleRefreshKey] = useState(0);
 
   const toggleChecklist = (item: string) => {
     setChecklistState(prev => {
@@ -69,6 +74,26 @@ const EventPlannerDashboard = ({ event, eventServices, inquiries }: EventPlanner
     rejected: inquiries.filter(i => i.status === 'rejected').length,
   }), [inquiries]);
 
+  // Vendor lifecycle counts
+  const lifecycleCounts = useMemo(() => {
+    return getLifecycleCounts(event.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.id, lifecycleRefreshKey]);
+
+  // Readiness Score
+  const readiness = useMemo(() => {
+    return calculateReadinessScore({
+      eventType: event.event_type || '',
+      selectedServiceCount: eventServices.length,
+      confirmedVendorCount: lifecycleCounts.confirmed,
+      shortlistedVendorCount: lifecycleCounts.shortlisted + lifecycleCounts.negotiating,
+      budgetMin: event.budget_min,
+      budgetMax: event.budget_max,
+      eventDate: event.event_date,
+      inquiryCount: inquiryStats.total,
+    });
+  }, [event, eventServices.length, lifecycleCounts, inquiryStats.total]);
+
   // Planning progress
   const planningProgress = useMemo(() => {
     if (checklistItems.length === 0) return 0;
@@ -78,9 +103,15 @@ const EventPlannerDashboard = ({ event, eventServices, inquiries }: EventPlanner
 
   const budgetMid = ((event.budget_min || 0) + (event.budget_max || 0)) / 2;
 
+  // Estimated confirmed vendor cost (dummy — informational)
+  const confirmedVendors = useMemo(() => {
+    return getEventVendorLifecycles(event.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.id, lifecycleRefreshKey]);
+
   return (
     <div className="space-y-6">
-      {/* Event Overview */}
+      {/* Event Summary Card */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -121,28 +152,75 @@ const EventPlannerDashboard = ({ event, eventServices, inquiries }: EventPlanner
         </CardContent>
       </Card>
 
-      {/* Budget Health & Distribution */}
+      {/* Budget Overview + Readiness Score */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {budgetHealth && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
+        {/* Budget Overview */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-primary" />
+              Budget Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-xl bg-primary/5 text-center">
+                <p className="text-lg font-bold">₹{((event.budget_min || 0) + (event.budget_max || 0)) / 2 > 100000
+                  ? `${(((event.budget_min || 0) + (event.budget_max || 0)) / 200000).toFixed(1)}L`
+                  : Math.round(((event.budget_min || 0) + (event.budget_max || 0)) / 2).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">Est. Budget</p>
+              </div>
+              <div className="p-3 rounded-xl bg-muted/50 text-center">
+                <p className="text-lg font-bold">{lifecycleCounts.confirmed}</p>
+                <p className="text-xs text-muted-foreground">Confirmed Vendors</p>
+              </div>
+            </div>
+            {budgetHealth && (
+              <div className="flex items-center gap-2 text-sm">
                 {budgetHealth.status === 'below' && <TrendingDown className="h-4 w-4 text-destructive" />}
                 {budgetHealth.status === 'aligned' && <Minus className="h-4 w-4 text-primary" />}
                 {budgetHealth.status === 'above' && <TrendingUp className="h-4 w-4 text-secondary" />}
-                Budget Health: {budgetHealth.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">{budgetHealth.description}</p>
-              <div className="mt-3">
-                <Progress
-                  value={budgetHealth.status === 'below' ? 25 : budgetHealth.status === 'aligned' ? 65 : 90}
-                  className="h-2"
-                />
+                <span className="font-medium">{budgetHealth.label}</span>
+                <span className="text-muted-foreground text-xs">— {budgetHealth.description}</span>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Readiness Score */}
+        <ReadinessScoreCard readiness={readiness} />
+      </div>
+
+      {/* Vendor Status Summary */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Vendor Status Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
+            {[
+              { label: 'Shortlisted', value: lifecycleCounts.shortlisted, color: 'text-gold' },
+              { label: 'Negotiating', value: lifecycleCounts.negotiating, color: 'text-primary' },
+              { label: 'Confirmed', value: lifecycleCounts.confirmed, color: 'text-success' },
+              { label: 'Rejected', value: lifecycleCounts.rejected, color: 'text-destructive' },
+              { label: 'Inquiries Sent', value: inquiryStats.total, color: 'text-foreground' },
+            ].map(item => (
+              <div key={item.label} className="p-3 rounded-xl bg-muted/50">
+                <p className={`text-lg font-bold ${item.color}`}>{item.value}</p>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Confirmed Vendors */}
+      <ConfirmedVendorsCard eventId={event.id} refreshKey={lifecycleRefreshKey} />
+
+      {/* Smart Timeline + Budget Distribution */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {event.event_type && (
+          <SmartTimeline eventType={event.event_type} eventDate={event.event_date} />
         )}
 
         {distribution.length > 0 && (
@@ -186,7 +264,6 @@ const EventPlannerDashboard = ({ event, eventServices, inquiries }: EventPlanner
 
       {/* Planning Checklist & Inquiry Progress */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Checklist */}
         {checklistItems.length > 0 && (
           <Card>
             <CardHeader className="pb-2">
