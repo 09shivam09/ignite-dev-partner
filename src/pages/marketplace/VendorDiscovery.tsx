@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +16,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Loader2, ArrowLeft, MapPin, Star, Send, Check, Search, 
   Heart, Filter, ArrowUpDown, GitCompareArrows, X, ChevronLeft, ChevronRight,
-  Clock, Zap, Shield
+  Clock, Zap, Shield, CheckSquare
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
@@ -23,6 +24,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { AppLayout } from "@/components/layout/AppLayout";
 import VendorMatchCard from "@/components/marketplace/user/VendorMatchCard";
+import BudgetRangeSlider from "@/components/marketplace/user/BudgetRangeSlider";
+import VendorLifecycleSelect from "@/components/marketplace/user/VendorLifecycleSelect";
+import BulkInquiryBar from "@/components/marketplace/user/BulkInquiryBar";
 import type { VendorCardData } from "@/components/marketplace/user/VendorMatchCard";
 import type { MatchedVendor, MatchedService, Event, VendorService } from "@/types/marketplace";
 
@@ -45,7 +49,10 @@ const VendorDiscovery = () => {
   const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
   const [showCompare, setShowCompare] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [budgetFilter, setBudgetFilter] = useState<[number, number] | null>(null);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [isBulkSending, setIsBulkSending] = useState(false);
+  const [lifecycleRefreshKey, setLifecycleRefreshKey] = useState(0);
   const { data: event, isLoading: eventLoading, error: eventError } = useQuery({
     queryKey: ['event', eventId],
     queryFn: async () => {
@@ -265,6 +272,39 @@ const VendorDiscovery = () => {
 
   const isInquirySent = (vendorId: string) => sentInquiries.has(vendorId) || existingInquiries?.includes(vendorId);
 
+  const toggleBulkSelect = useCallback((vendorId: string) => {
+    setBulkSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(vendorId)) next.delete(vendorId);
+      else next.add(vendorId);
+      return next;
+    });
+  }, []);
+
+  const handleBulkInquiry = useCallback(async () => {
+    if (!user || !eventId || bulkSelected.size === 0) return;
+    setIsBulkSending(true);
+    try {
+      const vendorIds = Array.from(bulkSelected).filter(id => !isInquirySent(id));
+      if (vendorIds.length === 0) {
+        toast({ title: "Already sent", description: "Inquiries already sent to all selected vendors." });
+        setBulkSelected(new Set());
+        return;
+      }
+      const inserts = vendorIds.map(vendor_id => ({
+        event_id: eventId, vendor_id, user_id: user.id,
+        message: null, status: 'pending',
+      }));
+      const { error } = await supabase.from('inquiries').insert(inserts);
+      if (error) throw error;
+      setSentInquiries(prev => new Set([...prev, ...vendorIds]));
+      toast({ title: "Inquiries sent!", description: `Sent to ${vendorIds.length} vendor${vendorIds.length > 1 ? 's' : ''}.` });
+      setBulkSelected(new Set());
+      queryClient.invalidateQueries({ queryKey: ['event-inquiries'] });
+    } catch (error) {
+      toast({ title: "Error", description: error instanceof Error ? error.message : 'Failed', variant: "destructive" });
+    } finally { setIsBulkSending(false); }
+  }, [user, eventId, bulkSelected, sentInquiries, existingInquiries, toast, queryClient]);
   if (!eventId) {
     return (
       <AppLayout>
@@ -365,15 +405,29 @@ const VendorDiscovery = () => {
 
         {showFilters && (
           <Card>
-            <CardContent className="p-4">
-              <Label className="text-xs text-muted-foreground">Filter by Service</Label>
-              <Select value={filterService} onValueChange={(v) => { setFilterService(v); setCurrentPage(1); }}>
-                <SelectTrigger className="h-8 w-48 text-xs mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Services</SelectItem>
-                  {serviceNames.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <CardContent className="p-4 space-y-4">
+              <div>
+                <Label className="text-xs text-muted-foreground">Filter by Service</Label>
+                <Select value={filterService} onValueChange={(v) => { setFilterService(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="h-8 w-48 text-xs mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Services</SelectItem>
+                    {serviceNames.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              {event && (
+                <div>
+                  <Label className="text-xs text-muted-foreground">Budget Range Filter</Label>
+                  <div className="mt-2">
+                    <BudgetRangeSlider
+                      eventType={event.event_type || undefined}
+                      value={budgetFilter || [event.budget_min || 0, event.budget_max || 500000]}
+                      onChange={(val) => { setBudgetFilter(val); setCurrentPage(1); }}
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -382,16 +436,36 @@ const VendorDiscovery = () => {
         {paginatedVendors.length > 0 ? (
           <div className="space-y-3">
             {paginatedVendors.map((vendor) => (
-              <VendorMatchCard
-                key={vendor.id}
-                vendor={vendor}
-                isInquirySent={isInquirySent(vendor.id) || false}
-                isSaved={savedVendorIds?.includes(vendor.id) || false}
-                isComparing={compareIds.has(vendor.id)}
-                onSendInquiry={() => setSelectedVendor(vendor)}
-                onToggleSave={() => saveMutation.mutate(vendor.id)}
-                onToggleCompare={() => toggleCompare(vendor.id)}
-              />
+              <div key={vendor.id} className="relative">
+                {/* Bulk select checkbox + lifecycle tracker */}
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                  {eventId && (
+                    <VendorLifecycleSelect
+                      eventId={eventId}
+                      vendorId={vendor.id}
+                      vendorName={vendor.business_name}
+                      compact
+                      onStatusChange={() => setLifecycleRefreshKey(k => k + 1)}
+                    />
+                  )}
+                  {!isInquirySent(vendor.id) && (
+                    <Checkbox
+                      checked={bulkSelected.has(vendor.id)}
+                      onCheckedChange={() => toggleBulkSelect(vendor.id)}
+                      aria-label={`Select ${vendor.business_name} for bulk inquiry`}
+                    />
+                  )}
+                </div>
+                <VendorMatchCard
+                  vendor={vendor}
+                  isInquirySent={isInquirySent(vendor.id) || false}
+                  isSaved={savedVendorIds?.includes(vendor.id) || false}
+                  isComparing={compareIds.has(vendor.id)}
+                  onSendInquiry={() => setSelectedVendor(vendor)}
+                  onToggleSave={() => saveMutation.mutate(vendor.id)}
+                  onToggleCompare={() => toggleCompare(vendor.id)}
+                />
+              </div>
             ))}
           </div>
         ) : (
@@ -498,6 +572,14 @@ const VendorDiscovery = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Bulk Inquiry Floating Bar */}
+        <BulkInquiryBar
+          selectedCount={bulkSelected.size}
+          onSendAll={handleBulkInquiry}
+          onClear={() => setBulkSelected(new Set())}
+          isSending={isBulkSending}
+        />
       </div>
     </AppLayout>
   );

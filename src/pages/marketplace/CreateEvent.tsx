@@ -20,6 +20,7 @@ import {
   EVENT_TYPE_EMOJI 
 } from "@/lib/constants";
 import { Loader2, IndianRupee, ArrowLeft, ArrowRight, Check, Lightbulb, CheckSquare } from "lucide-react";
+import BudgetRangeSlider from "@/components/marketplace/user/BudgetRangeSlider";
 
 const STEPS = [
   { id: 'type', label: 'Event Type' },
@@ -46,6 +47,7 @@ const CreateEvent = () => {
     budgetMin: "",
     budgetMax: "",
   });
+  const [budgetSliderValue, setBudgetSliderValue] = useState<[number, number] | null>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   // Auto-advance if event type is pre-selected from URL
@@ -79,7 +81,7 @@ const CreateEvent = () => {
     switch (currentStep) {
       case 0: return !!formData.eventType;
       case 1: return !!formData.city;
-      case 2: return !!formData.budgetMin && !!formData.budgetMax;
+      case 2: return (!!formData.budgetMin && !!formData.budgetMax) || (budgetSliderValue !== null && budgetSliderValue[0] > 0 && budgetSliderValue[1] > budgetSliderValue[0]);
       case 3: return selectedServices.length > 0;
       case 4: return !!formData.title;
       default: return false;
@@ -111,8 +113,8 @@ const CreateEvent = () => {
       return;
     }
 
-    const budgetMin = parseInt(formData.budgetMin);
-    const budgetMax = parseInt(formData.budgetMax);
+    const budgetMin = budgetSliderValue ? budgetSliderValue[0] : parseInt(formData.budgetMin);
+    const budgetMax = budgetSliderValue ? budgetSliderValue[1] : parseInt(formData.budgetMax);
 
     if (isNaN(budgetMin) || isNaN(budgetMax) || budgetMin <= 0 || budgetMax <= 0) {
       toast({ title: "Error", description: "Please enter a valid budget range", variant: "destructive" });
@@ -265,47 +267,17 @@ const CreateEvent = () => {
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg">What's your budget range?</h3>
                   
-                  {budgetGuide && (
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                      <Lightbulb className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-muted-foreground">{budgetGuide.label}</p>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="budgetMin">Minimum Budget *</Label>
-                      <div className="relative">
-                        <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="budgetMin"
-                          type="number"
-                          placeholder={budgetGuide ? String(budgetGuide.min) : "50000"}
-                          className="pl-9"
-                          value={formData.budgetMin}
-                          onChange={(e) => setFormData({ ...formData, budgetMin: e.target.value })}
-                          min={0}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="budgetMax">Maximum Budget *</Label>
-                      <div className="relative">
-                        <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="budgetMax"
-                          type="number"
-                          placeholder={budgetGuide ? String(budgetGuide.max) : "200000"}
-                          className="pl-9"
-                          value={formData.budgetMax}
-                          onChange={(e) => setFormData({ ...formData, budgetMax: e.target.value })}
-                          min={0}
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <BudgetRangeSlider
+                    eventType={formData.eventType}
+                    value={budgetSliderValue || [
+                      budgetGuide?.min || 50000,
+                      budgetGuide?.max || 500000,
+                    ]}
+                    onChange={(val) => {
+                      setBudgetSliderValue(val);
+                      setFormData({ ...formData, budgetMin: String(val[0]), budgetMax: String(val[1]) });
+                    }}
+                  />
                 </div>
               )}
 
@@ -414,7 +386,7 @@ const CreateEvent = () => {
                       <span>City:</span>
                       <span>{CITIES.find(c => c.value === formData.city)?.label}</span>
                       <span>Budget:</span>
-                      <span>₹{parseInt(formData.budgetMin).toLocaleString()} - ₹{parseInt(formData.budgetMax).toLocaleString()}</span>
+                      <span>₹{(budgetSliderValue ? budgetSliderValue[0] : parseInt(formData.budgetMin || '0')).toLocaleString()} - ₹{(budgetSliderValue ? budgetSliderValue[1] : parseInt(formData.budgetMax || '0')).toLocaleString()}</span>
                       <span>Services:</span>
                       <span>{selectedServices.length} selected</span>
                     </div>
